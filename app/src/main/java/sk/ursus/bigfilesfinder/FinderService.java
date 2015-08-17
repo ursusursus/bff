@@ -186,6 +186,9 @@ public class FinderService extends Service {
 //            mNotificationManager.cancel(NOTIFICATION_ID);
             NotificationUtils.cancelProgressNotif(mNotificationManager);
             NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
+
+            Intent intent = new Intent(FinderService.this, MainActivity.class);
+            intent.putStringArrayListExtra()
         }
     };
 

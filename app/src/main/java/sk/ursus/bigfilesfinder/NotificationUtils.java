@@ -31,8 +31,8 @@ public class NotificationUtils {
     }
 
     public static void showFinishedNotif(Context context, NotificationManager nm) {
-        Intent intent = new Intent(context, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
+        final Intent intent = new Intent(context, MainActivity.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(
                 context, PENDING_INTENT_ID, intent, PendingIntent.FLAG_CANCEL_CURRENT);
 
         final Notification notification = new NotificationCompat.Builder(context)
