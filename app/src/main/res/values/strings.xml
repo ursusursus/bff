@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">BigFilesFinder</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="progress_notif_title">Searching for largest files</string>
+    <string name="finished_notif_title">Largest files found</string>
+    <string name="finished_notif_text">Foo bar</string>
+</resources>
