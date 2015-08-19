@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void foobar() {
-        int countOfLargest = 2;
+        int countOfLargest = 10;
         String[] folderNames = new String[]{
                 "foo", "bar"
         };
