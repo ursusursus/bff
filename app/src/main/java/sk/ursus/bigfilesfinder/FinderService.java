@@ -13,26 +13,14 @@ import android.util.Log;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.PriorityBlockingQueue;
 
 /**
  * Created by ursusursus on 17.8.2015.
  */
 public class FinderService extends Service {
-
-    private ArrayList<File> mAllFiles;
-    private long mStart;
-    private PriorityBlockingQueue<File> mFooFiles;
-    private int mWantedCount;
-    private Set<FindTask> mTasksInFlight;
-
-    public interface OnSearchFinishedListener {
-        void onFindFilesTaskFinished(FindTask task, List<File> largestFiles);
-    }
 
     private static final String TAG = "Default";
 
@@ -41,6 +29,10 @@ public class FinderService extends Service {
     private static final String EXTRA_FOLDER_NAMES = "folder_names";
 
     private NotificationManager mNotificationManager;
+    private Set<FindLargestFilesTask> mTasksInFlight;
+    private FilesPriorityQueueWrapper mFilesQueueWrapper;
+    private long mStart;
+
 
     public static void launch(Context context, int countOfLargest, String[] folderNames) {
         final Intent intent = new Intent(context, FinderService.class)
@@ -64,6 +56,7 @@ public class FinderService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "FinderService # onCreate");
+        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     }
 
     @Override
@@ -89,12 +82,11 @@ public class FinderService extends Service {
 //                }
 //            }
 //        }
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        NotificationUtils.showProgressNotif(this, mNotificationManager);
 
         final File[] folders = new File[]{
+                Environment.getDataDirectory(),
                 Environment.getRootDirectory(),
-                Environment.getExternalStorageDirectory()
+                Environment.getDownloadCacheDirectory()
         };
 
         if (countOfLargest == -1 || folders == null || folders.length <= 0) {
@@ -102,18 +94,24 @@ public class FinderService extends Service {
             return;
         }
 
-        mWantedCount = countOfLargest;
-        mTasksInFlight = Collections.synchronizedSet(new HashSet<FindTask>());
-        mAllFiles = new ArrayList<>();
-        mFooFiles = new PriorityBlockingQueue<File>(100, FILE_SIZE_ORDER_DESCENDING);
+        doFindLargestFiles(countOfLargest, folders);
+    }
+
+    private void doFindLargestFiles(int countOfLargest, File[] folders) {
+        NotificationUtils.showProgressNotif(this, mNotificationManager);
+
+        mTasksInFlight = Collections.synchronizedSet(new HashSet<FindLargestFilesTask>());
+        mFilesQueueWrapper = new FilesPriorityQueueWrapper(countOfLargest);
 
         Log.d("Default", "START");
         mStart = System.currentTimeMillis();
+
         for (int i = 0; i < folders.length; i++) {
             final File folder = folders[i];
+
             if (folder.exists() && folder.isDirectory()) {
-                final FindTask task = new FindTask(folder, countOfLargest, mListener);
-                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                final FindLargestFilesTask task = new FindLargestFilesTask();
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, folder);
                 mTasksInFlight.add(task);
             }
         }
@@ -130,47 +128,54 @@ public class FinderService extends Service {
         return null;
     }
 
-    private class FindTask extends AsyncTask<Void, Void, List<File>> {
+    private void handleTaskFinished(FindLargestFilesTask task) {
+        mTasksInFlight.remove(task);
+        if (mTasksInFlight.isEmpty()) {
+            handleAllTasksFinished();
+        }
+    }
 
-        private final File mFolder;
-        private final int mCountOfLargest;
-        // private final OnSearchFinishedListener mListener;
-
-        public FindTask(File folder, int countOfLargest, OnSearchFinishedListener listener) {
-            mFolder = folder;
-            mCountOfLargest = countOfLargest;
-//            mListener = listener;
+    private void handleAllTasksFinished() {
+        final ArrayList<File> largestFiles = mFilesQueueWrapper.toList();
+        Log.d("Default", "SIZE=" + largestFiles.size());
+        for (File file : largestFiles) {
+            Log.d("Default", "F=" + file.getAbsolutePath() + " SIZE=" + bytesToMegabytes(file.length()));
         }
 
+        long time = System.currentTimeMillis() - mStart;
+        Log.d("Default", "END      TOOK=" + time + "ms");
+
+        // Broadcast
+
+        NotificationUtils.cancelProgressNotif(mNotificationManager);
+        NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
+    }
+
+    private long bytesToMegabytes(long bytes) {
+        return bytes / (1024 * 1024);
+    }
+
+    private class FindLargestFilesTask extends AsyncTask<File, Void, List<File>> {
+
         @Override
-        protected List<File> doInBackground(Void... params) {
+        protected List<File> doInBackground(File... params) {
             Log.d("Default", "LAUNCH");
-            if (mFolder == null || !mFolder.exists() || !mFolder.isDirectory()) {
-                return null;
+            if (params.length >= 0) {
+                final File folder = params[0];
+                if (folder != null && folder.exists() && folder.isDirectory()) {
+                    collectFiles(folder, mFilesQueueWrapper);
+                }
             }
-
-            // final ArrayList<File> filesList = new ArrayList<File>();
-
-//            Log.i(TAG, "BEGIN");
-            // collect(mFolder, filesList);
-            collect(mFolder, mFooFiles);
-//            List<File> sublist = sortAndSlice(filesList);
-//            Log.i(TAG, "END");
-//
-//            long end = System.currentTimeMillis();
-//            Log.i(TAG, "took " + (end - start) + "ms");
-//            return sublist;
-            // return filesList;
             return null;
         }
 
         @Override
         protected void onPostExecute(List<File> files) {
             super.onPostExecute(files);
-            mListener.onFindFilesTaskFinished(this, files);
+            handleTaskFinished(this);
         }
 
-        private void collect(File folder, PriorityBlockingQueue<File> filesList) {
+        private void collectFiles(File folder, FilesPriorityQueueWrapper filesQueueWrapper) {
             final File[] files = folder.listFiles();
             if (files == null || files.length <= 0) {
                 return;
@@ -179,67 +184,13 @@ public class FinderService extends Service {
             for (int i = 0; i < files.length; i++) {
                 final File file = files[i];
                 if (file.isDirectory()) {
-                    // Log.d(TAG, file.getAbsolutePath() + "/");
-                    collect(file, filesList);
+                    collectFiles(file, filesQueueWrapper);
                 } else {
-                    // Log.d(TAG, file.getAbsolutePath());
-                    filesList.add(file);
+                    filesQueueWrapper.add(file);
                 }
             }
         }
 
-        private List<File> sortAndSlice(ArrayList<File> filesList) {
-            Collections.sort(filesList, FILE_SIZE_ORDER_DESCENDING);
-            // ceknut ci sublist z mensieho sa da
-            return filesList.subList(0, mCountOfLargest + 1);
-        }
-
     }
-
-    private long bytesToMegabytes(long bytes) {
-        return bytes / (1024 * 1024);
-    }
-
-    private final OnSearchFinishedListener mListener = new OnSearchFinishedListener() {
-        @Override
-        public void onFindFilesTaskFinished(FindTask task, List<File> largestFiles) {
-            handleTaskFinished(task);
-        }
-    };
-
-    private void handleTaskFinished(FindTask task) {
-        mTasksInFlight.remove(task);
-        if (mTasksInFlight.isEmpty()) {
-            handleAllTasksFinished();
-        }
-    }
-
-    private void handleAllTasksFinished() {
-        for (int i = 0; i < mWantedCount; i++) {
-            final File file = mFooFiles.poll();
-            Log.d("Default", "FILE=" + file.getAbsolutePath() + " SIZE=" + bytesToMegabytes(file.length()));
-        }
-        NotificationUtils.cancelProgressNotif(mNotificationManager);
-        NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
-        Log.d("Default", "END    e=" + mFooFiles.size());
-        long time = System.currentTimeMillis() - mStart;
-        Log.d("Default", "TOOK=" + time + "ms");
-
-//            Intent intent = new Intent(FinderService.this, MainActivity.class);
-//            intent.putStringArrayListExtra()
-    }
-
-    private static final Comparator<File> FILE_SIZE_ORDER_DESCENDING = new Comparator<File>() {
-        @Override
-        public int compare(File f1, File f2) {
-            if (f1.length() == f2.length()) {
-                return 0;
-            } else if (f1.length() < f2.length()) {
-                return 1;
-            } else {
-                return -1;
-            }
-        }
-    };
 
 }
