@@ -41,6 +41,6 @@ public class MainActivity extends AppCompatActivity {
         String[] folderNames = new String[]{
                 "foo", "bar"
         };
-        SearchService.launch(this, countOfLargest, folderNames);
+        FinderService.launch(this, countOfLargest, folderNames);
     }
 }
