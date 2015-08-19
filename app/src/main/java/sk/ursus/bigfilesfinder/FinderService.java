@@ -212,6 +212,9 @@ public class FinderService extends Service {
 
     private void handleAllTasksFinished() {
         Collections.sort(mAllFiles, FILE_SIZE_ORDER);
+        for(int i = 0; i < 3; i++) {
+            Log.d("Default", "FILE=" + mAllFiles.get(i).getAbsolutePath() + " SIZE=" + bytesToMegabytes(mAllFiles.get(i).length()));
+        }
         NotificationUtils.cancelProgressNotif(mNotificationManager);
         NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
         Log.d("Default", "END");
