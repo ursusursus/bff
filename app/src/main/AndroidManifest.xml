@@ -20,7 +20,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".FinderService"/>
+        <service android:name=".SearchService"/>
     </application>
 
 </manifest>

@@ -11,12 +11,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        int countOfLargest = 2;
-        String[] folderNames = new String[]{
-                "foo", "bar"
-        };
-        FinderService.launch(this, countOfLargest, folderNames);
     }
 
     @Override
@@ -35,9 +29,18 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            foobar();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void foobar() {
+        int countOfLargest = 2;
+        String[] folderNames = new String[]{
+                "foo", "bar"
+        };
+        SearchService.launch(this, countOfLargest, folderNames);
     }
 }
