@@ -5,7 +5,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -26,7 +25,7 @@ public class FinderService extends Service {
 
     private static final String ACTION_FIND_LARGEST_FILES = "sk.ursus.bigfilesfinder.ACTION_FIND_LARGEST_FILES";
     private static final String EXTRA_LARGEST_COUNT = "largest_count";
-    private static final String EXTRA_FOLDER_NAMES = "folder_names";
+    private static final String EXTRA_FOLDERS = "folder_names";
 
     private NotificationManager mNotificationManager;
     private Set<FindLargestFilesTask> mTasksInFlight;
@@ -34,18 +33,18 @@ public class FinderService extends Service {
     private long mStart;
 
 
-    public static void launch(Context context, int countOfLargest, String[] folderNames) {
+    public static void launch(Context context, int countOfLargest, ArrayList<FileWrapper> folders) {
         final Intent intent = new Intent(context, FinderService.class)
                 .setAction(ACTION_FIND_LARGEST_FILES)
                 .putExtra(EXTRA_LARGEST_COUNT, countOfLargest)
-                .putExtra(EXTRA_FOLDER_NAMES, folderNames);
+                .putExtra(EXTRA_FOLDERS, folders);
 
         context.startService(intent);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // co ked naspamuje sa launch() ?
+        Log.d("Default", "onStartCommand");
         if (ACTION_FIND_LARGEST_FILES.equals(intent.getAction())) {
             findLargestFiles(intent);
         }
@@ -66,38 +65,22 @@ public class FinderService extends Service {
     }
 
     private void findLargestFiles(Intent intent) {
+        if(mTasksInFlight != null && !mTasksInFlight.isEmpty()) {
+            // Some tasks are still running, ignoring...
+            return;
+        }
+
         final int countOfLargest = intent.getIntExtra(EXTRA_LARGEST_COUNT, -1);
-//        final String[] foldersNames = intent.getStringArrayExtra(EXTRA_FOLDER_NAMES);
-//
-//        if (countOfLargest == -1 || foldersNames == null || foldersNames.length <= 0) {
-//            return;
-//        }
-//
-//        for (int i = 0; i < foldersNames.length; i++) {
-//            final String folderName = foldersNames[i];
-//            if (!TextUtils.isEmpty(folderName)) {
-//                final File folderFile = new File(folderName);
-//                new FindTask().execute();
-//                if (folderFile.exists() && folderFile.isDirectory()) {
-//                }
-//            }
-//        }
-
-        final File[] folders = new File[]{
-                Environment.getDataDirectory(),
-                Environment.getRootDirectory(),
-                Environment.getDownloadCacheDirectory()
-        };
-
-        if (countOfLargest == -1 || folders == null || folders.length <= 0) {
-            // dafuq
+        final ArrayList<FileWrapper> folders = intent.getParcelableArrayListExtra(EXTRA_FOLDERS);
+        if (countOfLargest == -1 || folders == null || folders.size() <= 0) {
+            // error: invalid input
             return;
         }
 
         doFindLargestFiles(countOfLargest, folders);
     }
 
-    private void doFindLargestFiles(int countOfLargest, File[] folders) {
+    private void doFindLargestFiles(int countOfLargest, ArrayList<FileWrapper> folders) {
         NotificationUtils.showProgressNotif(this, mNotificationManager);
 
         mTasksInFlight = Collections.synchronizedSet(new HashSet<FindLargestFilesTask>());
@@ -106,8 +89,8 @@ public class FinderService extends Service {
         Log.d("Default", "START");
         mStart = System.currentTimeMillis();
 
-        for (int i = 0; i < folders.length; i++) {
-            final File folder = folders[i];
+        for (int i = 0; i < folders.size(); i++) {
+            final File folder = folders.get(i).toFile();
 
             if (folder.exists() && folder.isDirectory()) {
                 final FindLargestFilesTask task = new FindLargestFilesTask();
@@ -117,7 +100,7 @@ public class FinderService extends Service {
         }
 
         if (mTasksInFlight.isEmpty()) {
-            // dafuq
+            // error: no valid folders
         }
     }
 
@@ -137,15 +120,16 @@ public class FinderService extends Service {
 
     private void handleAllTasksFinished() {
         final ArrayList<File> largestFiles = mFilesQueueWrapper.toList();
-        Log.d("Default", "SIZE=" + largestFiles.size());
-        for (File file : largestFiles) {
-            Log.d("Default", "F=" + file.getAbsolutePath() + " SIZE=" + bytesToMegabytes(file.length()));
-        }
+//        Log.d("Default", "SIZE=" + largestFiles.size());
+//        for (File file : largestFiles) {
+//            Log.d("Default", "F=" + file.getAbsolutePath() + " SIZE=" + bytesToMegabytes(file.length()));
+//        }
 
         long time = System.currentTimeMillis() - mStart;
         Log.d("Default", "END      TOOK=" + time + "ms");
 
         // Broadcast
+        BroadcastUtils.sendSearchFinished(this, largestFiles);
 
         NotificationUtils.cancelProgressNotif(mNotificationManager);
         NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);

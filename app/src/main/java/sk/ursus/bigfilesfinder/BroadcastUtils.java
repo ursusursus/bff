@@ -1,6 +1,8 @@
 package sk.ursus.bigfilesfinder;
 
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -10,13 +12,33 @@ import java.util.ArrayList;
  */
 public class BroadcastUtils {
 
-    public static final String ACTION_LARGEST_FILES_FOUND = "sk.ursus.bigfilesfinder.ACTION_LARGEST_FILES_FOUND";
-    public static final String EXTRA_FILES = "files";
+    public static final String ACTION_SEARCH_STARTED = "sk.ursus.bigfilesfinder.ACTION_SEARCH_STARTED";
+    public static final String ACTION_SEARCH_FINISHED = "sk.ursus.bigfilesfinder.ACTION_SEARCH_FINISHED";
+    public static final String ACTION_SEARCH_ERROR = "sk.ursus.bigfilesfinder.ACTION_SEARCH_ERROR";
 
-    public static void sendLargestFiles(Context context, ArrayList<File> largestFiles) {
-//        final Intent intent = new Intent(ACTION_LARGEST_FILES_FOUND)
-//                .put(EXTRA_FILES, largestFiles);
-//
-//        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    public static final String EXTRA_FILES = "files";
+    public static final String EXTRA_ERROR = "error";
+
+    public static void sendSearchFinished(Context context, ArrayList<File> files) {
+        final ArrayList<FileWrapper> fileWrappers = new ArrayList<FileWrapper>(files.size());
+        for (int i = 0; i < files.size(); i++) {
+             fileWrappers.add(FileWrapper.fromFile(files.get(i)));
+
+        }
+        final Intent intent = new Intent(ACTION_SEARCH_FINISHED)
+                .putParcelableArrayListExtra(EXTRA_FILES, fileWrappers);
+
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    public static void sendSearchStarted(Context context) {
+        final Intent intent = new Intent(ACTION_SEARCH_STARTED);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    }
+
+    public static void sendSearchError(Context context, int errorCode) {
+        final Intent intent = new Intent(ACTION_SEARCH_ERROR)
+                .putExtra(EXTRA_ERROR, errorCode);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }
 }
