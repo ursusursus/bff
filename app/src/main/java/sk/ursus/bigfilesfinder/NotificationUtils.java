@@ -19,6 +19,7 @@ public class NotificationUtils {
     public static void showProgressNotif(Context context, NotificationManager nm) {
         final Notification notification = new NotificationCompat.Builder(context)
                 .setContentIntent(prepareIntent(context))
+                .setColor(context.getResources().getColor(R.color.orange))
                 .setContentTitle(context.getString(R.string.progress_notif_title))
                 .setContentText(context.getString(R.string.app_name))
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -35,6 +36,7 @@ public class NotificationUtils {
     public static void showFinishedNotif(Context context, NotificationManager nm) {
         final Notification notification = new NotificationCompat.Builder(context)
                 .setContentIntent(prepareIntent(context))
+                .setColor(context.getResources().getColor(R.color.orange))
                 .setContentTitle(context.getString(R.string.finished_notif_title))
                 .setContentText(context.getString(R.string.finished_notif_text))
                 .setSmallIcon(R.mipmap.ic_launcher)

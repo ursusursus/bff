@@ -2,11 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:layout_gravity="bottom"
               android:layout_marginBottom="4dp"
               android:layout_marginRight="4dp"
               android:background="@drawable/chip_background"
               android:elevation="2dp"
+              android:gravity="center_vertical"
               android:orientation="horizontal"
               android:paddingBottom="4dp"
               android:paddingLeft="8dp"
@@ -15,11 +15,19 @@
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_vertical"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="4dp"
         android:fontFamily="sans-serif-medium"
         android:textColor="@android:color/white"
         android:textSize="14sp"/>
+
+    <ImageView
+        android:id="@+id/cancelImageView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:src="@drawable/ic_action_clear"/>
 
 </LinearLayout>

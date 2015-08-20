@@ -31,6 +31,7 @@ public class FilePickerFragment extends BaseFragment {
     private File mCurrentFolder;
     private HashSet<File> mSelectedFolders;
     private FileChipsView mChipsView;
+    private Toolbar mToolbar;
 
     public static FilePickerFragment newInstance() {
         FilePickerFragment f = new FilePickerFragment();
@@ -53,8 +54,8 @@ public class FilePickerFragment extends BaseFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
-        toolbar.setTitle("Choose folders");
+        mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
+        mToolbar.setTitle("Choose folders");
 
         mChipsView = (FileChipsView) view.findViewById(R.id.chipsView);
 
@@ -89,9 +90,7 @@ public class FilePickerFragment extends BaseFragment {
         if (file == null || !file.exists()) {
             return null;
         }
-        final File[] files = file.listFiles(mFilter);
-        Arrays.sort(files, ALPHABETICAL_ORDER);
-        return files;
+        return file.listFiles(mFilter);
     }
 
     private void navigateIn(File file) {
@@ -101,10 +100,12 @@ public class FilePickerFragment extends BaseFragment {
             return;
         }
 
-        mAdapter.setFiles(listFolders(file));
+        Arrays.sort(files, ALPHABETICAL_ORDER);
+        mAdapter.setFiles(files);
         mAdapter.notifyDataSetChanged();
 
         mCurrentFolder = file;
+        mToolbar.setSubtitle(file.getAbsolutePath());
     }
 
     @Override

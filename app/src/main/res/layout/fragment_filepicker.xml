@@ -2,15 +2,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
+              android:background="@android:color/white"
               android:orientation="vertical">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/gray"
-        android:elevation="@dimen/toolbarElevation"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"/>
+        style="@style/Toolbar"/>
 
     <sk.ursus.bigfilesfinder.FileChipsView
         android:id="@+id/chipsView"
@@ -18,9 +15,11 @@
         android:layout_height="wrap_content"
         android:background="@color/gray"
         android:elevation="@dimen/toolbarElevation"
-        android:paddingBottom="12dp"
+        android:paddingBottom="16dp"
         android:paddingLeft="16dp"
-        android:paddingRight="16dp"/>
+        android:paddingRight="16dp"
+        android:paddingTop="8dp"
+        android:visibility="gone"/>
 
     <FrameLayout
         android:layout_width="match_parent"

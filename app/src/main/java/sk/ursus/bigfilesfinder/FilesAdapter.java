@@ -1,12 +1,13 @@
 package sk.ursus.bigfilesfinder;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
@@ -43,11 +44,11 @@ public class FilesAdapter extends BaseAdapter {
 
         final File file = (File) getItem(position);
         holder.mTitleTextView.setText(file.getName());
-        holder.mCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        holder.mAddContainer.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(mListener != null) {
-                    mListener.onChecked(position, isChecked);
+            public void onClick(View v) {
+                if (mListener != null) {
+                    mListener.onChecked(position, true);
                 }
             }
         });
@@ -77,11 +78,16 @@ public class FilesAdapter extends BaseAdapter {
     private static class ViewHolder {
 
         public final TextView mTitleTextView;
-        private final CheckBox mCheckBox;
+        private final ViewGroup mAddContainer;
 
         public ViewHolder(View view) {
             mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
-            mCheckBox = (CheckBox) view.findViewById(R.id.checkBox);
+            mAddContainer = (ViewGroup) view.findViewById(R.id.addContainer);
+
+            final ImageView mAddImageView = (ImageView) view.findViewById(R.id.addImageView);
+            Drawable d = mAddImageView.getDrawable();
+            d = DrawableCompat.wrap(d);
+            DrawableCompat.setTint(d, view.getResources().getColor(R.color.gray_foo));
         }
 
     }

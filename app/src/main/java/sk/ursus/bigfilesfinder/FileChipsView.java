@@ -1,11 +1,10 @@
 package sk.ursus.bigfilesfinder;
 
 import android.content.Context;
-import android.os.Build;
-import android.transition.TransitionManager;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.apmem.tools.layouts.FlowLayout;
@@ -43,11 +42,22 @@ public class FileChipsView extends FlowLayout {
 
         final TextView textView = (TextView) childView.findViewById(R.id.textView);
         textView.setText(file.getAbsolutePath());
+        final ImageView cancelImageView = (ImageView) childView.findViewById(R.id.cancelImageView);
+        cancelImageView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Utils.beginDelayedTransition(FileChipsView.this);
+                removeView(childView);
+                foobarVisibility();
+            }
+        });
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            TransitionManager.beginDelayedTransition(this);
-        }
+        Utils.beginDelayedTransition(this);
         addView(childView);
+        foobarVisibility();
+    }
 
+    private void foobarVisibility() {
+        setVisibility(getChildCount() > 0 ? View.VISIBLE : View.GONE);
     }
 }
