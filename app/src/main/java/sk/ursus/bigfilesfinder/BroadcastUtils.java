@@ -20,13 +20,13 @@ public class BroadcastUtils {
     public static final String EXTRA_ERROR = "error";
 
     public static void sendSearchFinished(Context context, ArrayList<File> files) {
-        final ArrayList<FileWrapper> fileWrappers = new ArrayList<FileWrapper>(files.size());
+        final ArrayList<FilePath> filePaths = new ArrayList<FilePath>(files.size());
         for (int i = 0; i < files.size(); i++) {
-             fileWrappers.add(FileWrapper.fromFile(files.get(i)));
+             filePaths.add(FilePath.fromFile(files.get(i)));
 
         }
         final Intent intent = new Intent(ACTION_SEARCH_FINISHED)
-                .putParcelableArrayListExtra(EXTRA_FILES, fileWrappers);
+                .putParcelableArrayListExtra(EXTRA_FILES, filePaths);
 
         LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
     }

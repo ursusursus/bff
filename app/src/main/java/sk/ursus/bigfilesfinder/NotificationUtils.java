@@ -18,9 +18,11 @@ public class NotificationUtils {
 
     public static void showProgressNotif(Context context, NotificationManager nm) {
         final Notification notification = new NotificationCompat.Builder(context)
+                .setContentIntent(prepareIntent(context))
                 .setContentTitle(context.getString(R.string.progress_notif_title))
                 .setContentText(context.getString(R.string.app_name))
                 .setSmallIcon(R.mipmap.ic_launcher)
+                .setOngoing(true)
                 .setProgress(0, 0, true)
                 .build();
         nm.notify(PROGRESS_NOTIF_ID, notification);
@@ -31,16 +33,22 @@ public class NotificationUtils {
     }
 
     public static void showFinishedNotif(Context context, NotificationManager nm) {
-        final Intent intent = new Intent(context, MainActivity.class);
-        final PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, PENDING_INTENT_ID, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-
         final Notification notification = new NotificationCompat.Builder(context)
-                .setContentIntent(pendingIntent)
+                .setContentIntent(prepareIntent(context))
                 .setContentTitle(context.getString(R.string.finished_notif_title))
                 .setContentText(context.getString(R.string.finished_notif_text))
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .build();
         nm.notify(FINISHED_NOTIF_ID, notification);
+    }
+
+    public static void cancelFinishedNotif(NotificationManager nm) {
+        nm.cancel(FINISHED_NOTIF_ID);
+    }
+
+    private static PendingIntent prepareIntent(Context context) {
+        final Intent intent = new Intent(context, MainActivity.class);
+        return PendingIntent.getActivity(
+                context, PENDING_INTENT_ID, intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 }

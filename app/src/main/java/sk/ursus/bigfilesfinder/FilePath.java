@@ -8,15 +8,15 @@ import java.io.File;
 /**
  * Created by ursusursus on 19.8.2015.
  */
-public class FileWrapper implements Parcelable {
+public class FilePath implements Parcelable {
 
     private final String mPath;
 
-    public static FileWrapper fromFile(File file) {
-        return new FileWrapper(file.getAbsolutePath());
+    public static FilePath fromFile(File file) {
+        return new FilePath(file.getAbsolutePath());
     }
 
-    protected FileWrapper(String path) {
+    protected FilePath(String path) {
         mPath = path;
     }
 
@@ -34,17 +34,17 @@ public class FileWrapper implements Parcelable {
         dest.writeString(this.mPath);
     }
 
-    protected FileWrapper(Parcel in) {
+    protected FilePath(Parcel in) {
         this.mPath = in.readString();
     }
 
-    public static final Creator<FileWrapper> CREATOR = new Creator<FileWrapper>() {
-        public FileWrapper createFromParcel(Parcel source) {
-            return new FileWrapper(source);
+    public static final Creator<FilePath> CREATOR = new Creator<FilePath>() {
+        public FilePath createFromParcel(Parcel source) {
+            return new FilePath(source);
         }
 
-        public FileWrapper[] newArray(int size) {
-            return new FileWrapper[size];
+        public FilePath[] newArray(int size) {
+            return new FilePath[size];
         }
     };
 

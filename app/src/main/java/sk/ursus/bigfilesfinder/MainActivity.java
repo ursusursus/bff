@@ -59,9 +59,9 @@ public class MainActivity extends AppCompatActivity {
     private void foobar() {
         int countOfLargest = 10;
         // potom este check na null fily bude treba
-        ArrayList<FileWrapper> folders = new ArrayList<>();
-        folders.add(FileWrapper.fromFile(Environment.getExternalStorageDirectory()));
-        folders.add(FileWrapper.fromFile(Environment.getDataDirectory()));
+        ArrayList<FilePath> folders = new ArrayList<>();
+        folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
+        folders.add(FilePath.fromFile(Environment.getDataDirectory()));
 
         FinderService.launch(this, countOfLargest, folders);
     }
@@ -76,8 +76,8 @@ public class MainActivity extends AppCompatActivity {
 
         private void handleLargestFilesFound(Intent intent) {
             final TextView textView = (TextView) findViewById(R.id.textView);
-            final ArrayList<FileWrapper> fileWrappers = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
-            for (FileWrapper fw : fileWrappers) {
+            final ArrayList<FilePath> filePaths = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
+            for (FilePath fw : filePaths) {
                 final File f = fw.toFile();
                 textView.append("F=" + f.getAbsolutePath() + " S=" + f.length() + "\n\n");
             }

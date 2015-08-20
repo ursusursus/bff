@@ -29,11 +29,11 @@ public class FinderService extends Service {
 
     private NotificationManager mNotificationManager;
     private Set<FindLargestFilesTask> mTasksInFlight;
-    private FilesPriorityQueueWrapper mFilesQueueWrapper;
+    private FilesBoundedPriorityQueue mFilesPriorityQueue;
     private long mStart;
 
 
-    public static void launch(Context context, int countOfLargest, ArrayList<FileWrapper> folders) {
+    public static void launch(Context context, int countOfLargest, ArrayList<FilePath> folders) {
         final Intent intent = new Intent(context, FinderService.class)
                 .setAction(ACTION_FIND_LARGEST_FILES)
                 .putExtra(EXTRA_LARGEST_COUNT, countOfLargest)
@@ -71,7 +71,7 @@ public class FinderService extends Service {
         }
 
         final int countOfLargest = intent.getIntExtra(EXTRA_LARGEST_COUNT, -1);
-        final ArrayList<FileWrapper> folders = intent.getParcelableArrayListExtra(EXTRA_FOLDERS);
+        final ArrayList<FilePath> folders = intent.getParcelableArrayListExtra(EXTRA_FOLDERS);
         if (countOfLargest == -1 || folders == null || folders.size() <= 0) {
             // error: invalid input
             return;
@@ -80,11 +80,12 @@ public class FinderService extends Service {
         doFindLargestFiles(countOfLargest, folders);
     }
 
-    private void doFindLargestFiles(int countOfLargest, ArrayList<FileWrapper> folders) {
+    private void doFindLargestFiles(int countOfLargest, ArrayList<FilePath> folders) {
+        NotificationUtils.cancelFinishedNotif(mNotificationManager);
         NotificationUtils.showProgressNotif(this, mNotificationManager);
 
         mTasksInFlight = Collections.synchronizedSet(new HashSet<FindLargestFilesTask>());
-        mFilesQueueWrapper = new FilesPriorityQueueWrapper(countOfLargest);
+        mFilesPriorityQueue = new FilesBoundedPriorityQueue(countOfLargest);
 
         Log.d("Default", "START");
         mStart = System.currentTimeMillis();
@@ -119,7 +120,7 @@ public class FinderService extends Service {
     }
 
     private void handleAllTasksFinished() {
-        final ArrayList<File> largestFiles = mFilesQueueWrapper.toList();
+        final ArrayList<File> largestFiles = mFilesPriorityQueue.toList();
 //        Log.d("Default", "SIZE=" + largestFiles.size());
 //        for (File file : largestFiles) {
 //            Log.d("Default", "F=" + file.getAbsolutePath() + " SIZE=" + bytesToMegabytes(file.length()));
@@ -133,6 +134,8 @@ public class FinderService extends Service {
 
         NotificationUtils.cancelProgressNotif(mNotificationManager);
         NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
+
+        stopSelf();
     }
 
     private long bytesToMegabytes(long bytes) {
@@ -147,7 +150,7 @@ public class FinderService extends Service {
             if (params.length >= 0) {
                 final File folder = params[0];
                 if (folder != null && folder.exists() && folder.isDirectory()) {
-                    collectFiles(folder, mFilesQueueWrapper);
+                    collectFiles(folder, mFilesPriorityQueue);
                 }
             }
             return null;
@@ -159,7 +162,7 @@ public class FinderService extends Service {
             handleTaskFinished(this);
         }
 
-        private void collectFiles(File folder, FilesPriorityQueueWrapper filesQueueWrapper) {
+        private void collectFiles(File folder, FilesBoundedPriorityQueue filesQueueWrapper) {
             final File[] files = folder.listFiles();
             if (files == null || files.length <= 0) {
                 return;
