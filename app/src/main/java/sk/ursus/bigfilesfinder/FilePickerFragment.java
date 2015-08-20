@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -62,11 +63,15 @@ public class FilePickerFragment extends BaseFragment {
             @Override
             public void onClick(View v) {
                 Log.d("Default","DONE=" + mSelectedFolders.size());
+                ArrayList<FilePath> filepaths = new ArrayList<>();
                 final Iterator<File> iter = mSelectedFolders.iterator();
                 while(iter.hasNext()) {
                     File file = iter.next();
+                    filepaths.add(FilePath.fromFile(file));
                     Log.d("Default","FILE=" + file.getAbsolutePath());
                 }
+
+                FinderService.launch(getActivity(), 5, filepaths);
             }
         });
 
