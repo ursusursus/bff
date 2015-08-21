@@ -21,9 +21,11 @@ import android.widget.TextView;
  */
 public class WelcomeFragment extends BaseFragment {
 
-    public static final int DURATION_ALPHA = 1250;
-    public static final int DURATION_TRANSLATE = 1250;
-    public static final int START_OFFSET = 125;
+    public static final String TAG = "welcome_fragment";
+
+    private static final int DURATION_ALPHA = 1250;
+    private static final int DURATION_TRANSLATE = 1250;
+    private static final int START_OFFSET = 125;
 
     public static WelcomeFragment newInstance() {
         final WelcomeFragment f = new WelcomeFragment();
@@ -43,6 +45,12 @@ public class WelcomeFragment extends BaseFragment {
         final TextView textView1 = (TextView) view.findViewById(R.id.textView1);
         final TextView textView2 = (TextView) view.findViewById(R.id.textView2);
         final FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((MainActivity) getActivity()).onWelcomeFragmentFinished();
+            }
+        });
 
         textView1.setAlpha(0F);
         textView1.setTranslationY(START_OFFSET);

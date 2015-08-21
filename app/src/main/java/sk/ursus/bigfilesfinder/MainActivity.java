@@ -22,7 +22,8 @@ public class MainActivity extends AppCompatActivity {
         boolean onBackPressed();
 
     }
-    public ArrayList<BackListener> mBackListeners = new ArrayList<>();
+
+    private ArrayList<BackListener> mBackListeners = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,9 +33,8 @@ public class MainActivity extends AppCompatActivity {
         intentFilter.addAction(BroadcastUtils.ACTION_SEARCH_FINISHED);
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, intentFilter);
 
-        swap(WelcomeFragment.newInstance(), FilePickerFragment.TAG);
+        swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG);
     }
-
     private void swap(BaseFragment f, String tag) {
         getSupportFragmentManager()
                 .beginTransaction()
@@ -42,8 +42,8 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    public void onAnimationFinished() {
-
+    public void onWelcomeFragmentFinished() {
+        swap(FolderPickerFragment.newInstance(), FolderPickerFragment.TAG);
     }
 
     @Override
