@@ -153,7 +153,7 @@ public class FilePickerFragment extends BaseFragment {
         public void onChecked(int position, boolean checked) {
             Log.d("Default", "onChecked pos=" + position + " checked=" + checked);
             final File file = (File) mAdapter.getItem(position);
-            
+
             Utils.beginDelayedTransition((ViewGroup) getView());
             if (checked) {
                 addFolder(file);
