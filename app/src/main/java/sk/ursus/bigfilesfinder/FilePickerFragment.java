@@ -58,18 +58,26 @@ public class FilePickerFragment extends BaseFragment {
         mToolbar.setTitle("Choose folders");
 
         mChipsView = (FileChipsView) view.findViewById(R.id.chipsView);
+        mChipsView.setOnDismissListener(new FileChipsView.OnDismissListener() {
+            @Override
+            public void onDismiss(File file) {
+                Utils.beginDelayedTransition((ViewGroup) getView());
+                removeFolder(file);
+                updateChipsView();
+            }
+        });
 
         final Button doneButton = (Button) view.findViewById(R.id.doneButton);
         doneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Default","DONE=" + mSelectedFolders.size());
+                Log.d("Default", "DONE=" + mSelectedFolders.size());
                 ArrayList<FilePath> filepaths = new ArrayList<>();
                 final Iterator<File> iter = mSelectedFolders.iterator();
-                while(iter.hasNext()) {
+                while (iter.hasNext()) {
                     File file = iter.next();
                     filepaths.add(FilePath.fromFile(file));
-                    Log.d("Default","FILE=" + file.getAbsolutePath());
+                    Log.d("Default", "FILE=" + file.getAbsolutePath());
                 }
 
                 FinderService.launch(getActivity(), 5, filepaths);
@@ -94,8 +102,8 @@ public class FilePickerFragment extends BaseFragment {
     }
 
     private void navigateIn(File file) {
-        File[] files = listFolders(file);
-        if(files == null || files.length <=0) {
+        final File[] files = listFolders(file);
+        if (files == null || files.length <= 0) {
             Toast.makeText(getActivity(), "Folder " + file.getName() + " has no subfolders", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -111,14 +119,18 @@ public class FilePickerFragment extends BaseFragment {
     @Override
     public boolean onBackPressed() {
         Log.d("Default", "onBackPress");
-        if(mCurrentFolder != null) {
+        if (mCurrentFolder != null) {
             final File parentFolder = mCurrentFolder.getParentFile();
-            if(parentFolder != null) {
+            if (parentFolder != null) {
                 navigateIn(parentFolder);
                 return true;
             }
         }
         return false;
+    }
+
+    private void updateChipsView() {
+        mChipsView.setVisibility(mChipsView.getChildCount() > 0 ? View.VISIBLE : View.GONE);
     }
 
     private FileFilter mFilter = new FileFilter() {
@@ -139,16 +151,28 @@ public class FilePickerFragment extends BaseFragment {
     private FilesAdapter.OnCheckedListener mCheckedListener = new FilesAdapter.OnCheckedListener() {
         @Override
         public void onChecked(int position, boolean checked) {
-            Log.d("Default","onChecked pos=" + position + " checked=" + checked);
+            Log.d("Default", "onChecked pos=" + position + " checked=" + checked);
             final File file = (File) mAdapter.getItem(position);
-            if(checked) {
-                mSelectedFolders.add(file);
-                mChipsView.add(file);
+            
+            Utils.beginDelayedTransition((ViewGroup) getView());
+            if (checked) {
+                addFolder(file);
             } else {
-                mSelectedFolders.remove(file);
+                removeFolder(file);
             }
+            updateChipsView();
         }
     };
+
+    private void removeFolder(File file) {
+        mSelectedFolders.remove(file);
+        mChipsView.remove(file);
+    }
+
+    private void addFolder(File file) {
+        mSelectedFolders.add(file);
+        mChipsView.add(file);
+    }
 
     private static final Comparator<File> ALPHABETICAL_ORDER = new Comparator<File>() {
 

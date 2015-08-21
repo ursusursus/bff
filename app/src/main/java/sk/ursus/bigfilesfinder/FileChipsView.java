@@ -10,12 +10,19 @@ import android.widget.TextView;
 import org.apmem.tools.layouts.FlowLayout;
 
 import java.io.File;
+import java.util.ArrayList;
 
 /**
  * Created by vbrecka on 20.8.2015.
  */
 public class FileChipsView extends FlowLayout {
 
+    public interface OnDismissListener {
+        void onDismiss(File file);
+    }
+
+    private ArrayList<File> mFiles = new ArrayList<>();
+    private OnDismissListener mOnDismissListener;
     private LayoutInflater mInflater;
 
     public FileChipsView(Context context) {
@@ -33,31 +40,39 @@ public class FileChipsView extends FlowLayout {
         init();
     }
 
+    public void setOnDismissListener(OnDismissListener listener) {
+        mOnDismissListener = listener;
+    }
+
     private void init() {
         mInflater = LayoutInflater.from(getContext());
     }
 
-    public void add(File file) {
+    public void add(final File file) {
         final View childView = mInflater.inflate(R.layout.chip, this, false);
 
         final TextView textView = (TextView) childView.findViewById(R.id.textView);
         textView.setText(file.getAbsolutePath());
+
         final ImageView cancelImageView = (ImageView) childView.findViewById(R.id.cancelImageView);
         cancelImageView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Utils.beginDelayedTransition(FileChipsView.this);
-                removeView(childView);
-                foobarVisibility();
+                if (mOnDismissListener != null) {
+                    mOnDismissListener.onDismiss(file);
+                }
             }
         });
 
-        Utils.beginDelayedTransition(this);
         addView(childView);
-        foobarVisibility();
+        mFiles.add(file);
     }
 
-    private void foobarVisibility() {
-        setVisibility(getChildCount() > 0 ? View.VISIBLE : View.GONE);
+    public void remove(File file) {
+        final int index = mFiles.indexOf(file);
+        if (index >= 0) {
+            removeViewAt(index);
+            mFiles.remove(index);
+        }
     }
 }
