@@ -6,4 +6,11 @@
     <string name="progress_notif_title">Searching for largest files</string>
     <string name="finished_notif_title">Largest files found</string>
     <string name="finished_notif_text">Foo bar</string>
+    <string name="author">by Vlastimil Brečka</string>
+    <string name="toolbar_choose_folders">Choose folders</string>
+    <string name="toolbar_results">Results</string>
+    <string name="error_invalid_input">Sorry, invalid input</string>
+    <string name="error_tasks_still_running">Sorry, there is a task still running</string>
+    <string name="error_no_valid_folders">Sorry, no valid folders</string>
+    <string name="error_default">Sorry, unable to find files</string>
 </resources>

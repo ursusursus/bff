@@ -1,4 +1,4 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,19 +11,30 @@ import java.io.File;
 public class FilePath implements Parcelable {
 
     private final String mPath;
+    private final long mSize;
 
     public static FilePath fromFile(File file) {
-        return new FilePath(file.getAbsolutePath());
+        return new FilePath(file.getAbsolutePath(), file.length());
     }
 
-    protected FilePath(String path) {
+    protected FilePath(String path, long size) {
         mPath = path;
+        mSize = size;
     }
 
     public File toFile() {
         return new File(mPath);
     }
 
+    public String getPath() {
+        return mPath;
+    }
+
+    public long getSize() {
+        return mSize;
+    }
+
+    // Parcelable boilerplate
     @Override
     public int describeContents() {
         return 0;
@@ -31,11 +42,13 @@ public class FilePath implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.mPath);
+        dest.writeString(mPath);
+        dest.writeLong(mSize);
     }
 
     protected FilePath(Parcel in) {
-        this.mPath = in.readString();
+        mPath = in.readString();
+        mSize = in.readLong();
     }
 
     public static final Creator<FilePath> CREATOR = new Creator<FilePath>() {
@@ -48,4 +61,7 @@ public class FilePath implements Parcelable {
         }
     };
 
+    public String getName() {
+        return "VID1065156.mp4";
+    }
 }

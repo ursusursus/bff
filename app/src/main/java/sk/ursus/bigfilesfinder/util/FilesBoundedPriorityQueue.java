@@ -1,4 +1,4 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.util;
 
 import java.io.File;
 import java.util.ArrayList;

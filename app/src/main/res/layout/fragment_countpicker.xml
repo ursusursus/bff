@@ -7,29 +7,41 @@
               android:orientation="vertical">
 
     <TextView
-        android:id="@+id/textView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-light"
-        android:text="@string/app_name"
-        android:layout_marginBottom="8dp"
+        android:text="I want to find"
         android:textColor="@android:color/white"
-        android:textSize="40sp"/>
+        android:textSize="28sp"/>
+
+    <EditText
+        android:id="@+id/countEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-light"
+        android:gravity="center_horizontal"
+        android:hint="how many"
+        android:imeOptions="actionDone"
+        android:inputType="number"
+        android:textColor="@color/orange"
+        android:textSize="28sp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark"
+        />
 
     <TextView
-        android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif-light"
-        android:text="@string/author"
-        android:textColor="@color/white_a50"
         android:paddingBottom="84dp"
-        android:textSize="20sp"/>
+        android:text="biggest files"
+        android:textColor="@android:color/white"
+        android:textSize="28sp"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_action_arrow_forward"/>
+        android:src="@drawable/ic_action_arrow_forward"
+        android:visibility="invisible"/>
 
 </LinearLayout>

@@ -1,4 +1,4 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.adapter;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -11,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+
+import sk.ursus.bigfilesfinder.R;
 
 /**
  * Created by vbrecka on 20.8.2015.

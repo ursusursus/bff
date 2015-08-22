@@ -1,49 +1,78 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.ui;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import sk.ursus.bigfilesfinder.FinderService;
+import sk.ursus.bigfilesfinder.R;
+import sk.ursus.bigfilesfinder.model.FilePath;
 
 public class MainActivity extends AppCompatActivity {
 
     public interface BackListener {
-
         boolean onBackPressed();
-
     }
 
     private ArrayList<BackListener> mBackListeners = new ArrayList<>();
+    private ArrayList<FilePath> mSelectedFoldersList;
+    private int mCount;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BroadcastUtils.ACTION_SEARCH_FINISHED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, intentFilter);
-
-        swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG);
+        if (savedInstanceState == null) {
+            swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG);
+        }
     }
+
     private void swap(BaseFragment f, String tag) {
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(R.id.container, f, tag)
+                .addToBackStack(null)
+                .replace(R.id.container, f, tag)
                 .commit();
     }
 
     public void onWelcomeFragmentFinished() {
         swap(FolderPickerFragment.newInstance(), FolderPickerFragment.TAG);
+    }
+
+    public void onFolderPickerFragmentFinished(HashSet<File> selectedFolders) {
+        Log.d("Default", "DONE=" + selectedFolders.size());
+        ArrayList<FilePath> filepaths = new ArrayList<>();
+        final Iterator<File> iter = selectedFolders.iterator();
+        while (iter.hasNext()) {
+            File file = iter.next();
+            filepaths.add(FilePath.fromFile(file));
+            Log.d("Default", "FILE=" + file.getAbsolutePath());
+        }
+
+        mSelectedFoldersList = filepaths;
+        swap(CountPickerFragment.newInstance(), CountPickerFragment.TAG);
+    }
+
+    public void onCountPickerFragmentFinished(int count) {
+        mCount = count;
+        swap(ResultsFragment.newInstance(), ResultsFragment.TAG);
+
+        FinderService.launch(MainActivity.this, mCount, mSelectedFoldersList);
+    }
+
+    public void onResultsFragmentFinished() {
+        mCount = 0;
+        mSelectedFoldersList.clear();
+        swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG);
     }
 
     @Override
@@ -65,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mBackListeners.clear();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -110,22 +138,4 @@ public class MainActivity extends AppCompatActivity {
 
         FinderService.launch(this, countOfLargest, folders);
     }
-
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (BroadcastUtils.ACTION_SEARCH_FINISHED.equals(intent.getAction())) {
-                handleLargestFilesFound(intent);
-            }
-        }
-
-        private void handleLargestFilesFound(Intent intent) {
-            final TextView textView = (TextView) findViewById(R.id.textView);
-            final ArrayList<FilePath> filePaths = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
-            for (FilePath fw : filePaths) {
-                final File f = fw.toFile();
-                textView.append("F=" + f.getAbsolutePath() + " S=" + f.length() + "\n\n");
-            }
-        }
-    };
 }

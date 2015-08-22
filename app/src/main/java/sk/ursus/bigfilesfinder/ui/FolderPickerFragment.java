@@ -1,25 +1,33 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.ui;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.Toolbar;
+import android.transition.AutoTransition;
+import android.transition.Transition;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
+
+import sk.ursus.bigfilesfinder.util.AnimUtils;
+import sk.ursus.bigfilesfinder.FileChipsView;
+import sk.ursus.bigfilesfinder.adapter.FilesAdapter;
+import sk.ursus.bigfilesfinder.R;
+import sk.ursus.bigfilesfinder.util.Utils;
 
 /**
  * Created by vbrecka on 20.8.2015.
@@ -32,6 +40,8 @@ public class FolderPickerFragment extends BaseFragment {
     private HashSet<File> mSelectedFolders;
     private FileChipsView mChipsView;
     private Toolbar mToolbar;
+    private FloatingActionButton mFab;
+    private TransitionWrapper mTransitionWrapper;
 
     public static FolderPickerFragment newInstance() {
         FolderPickerFragment f = new FolderPickerFragment();
@@ -47,7 +57,7 @@ public class FolderPickerFragment extends BaseFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_filepicker, container, false);
+        return inflater.inflate(R.layout.fragment_folderpicker, container, false);
     }
 
     @Override
@@ -55,32 +65,23 @@ public class FolderPickerFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         mToolbar = (Toolbar) view.findViewById(R.id.toolbar);
-        mToolbar.setTitle("Choose folders");
+        mToolbar.setTitle(R.string.toolbar_choose_folders);
 
         mChipsView = (FileChipsView) view.findViewById(R.id.chipsView);
         mChipsView.setOnDismissListener(new FileChipsView.OnDismissListener() {
             @Override
             public void onDismiss(File file) {
-                Utils.beginDelayedTransition((ViewGroup) getView());
+                Utils.beginDelayedTransition((ViewGroup) getView(), mTransitionWrapper.getTransition());
                 removeFolder(file);
                 updateChipsView();
             }
         });
 
-        final Button doneButton = (Button) view.findViewById(R.id.doneButton);
-        doneButton.setOnClickListener(new View.OnClickListener() {
+        mFab = (FloatingActionButton) view.findViewById(R.id.fab);
+        mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("Default", "DONE=" + mSelectedFolders.size());
-                ArrayList<FilePath> filepaths = new ArrayList<>();
-                final Iterator<File> iter = mSelectedFolders.iterator();
-                while (iter.hasNext()) {
-                    File file = iter.next();
-                    filepaths.add(FilePath.fromFile(file));
-                    Log.d("Default", "FILE=" + file.getAbsolutePath());
-                }
-
-                FinderService.launch(getActivity(), 5, filepaths);
+                ((MainActivity) getActivity()).onFolderPickerFragmentFinished(mSelectedFolders);
             }
         });
 
@@ -88,6 +89,9 @@ public class FolderPickerFragment extends BaseFragment {
         final ListView listView = (ListView) view.findViewById(R.id.listView);
         listView.setOnItemClickListener(mItemClickListener);
         listView.setAdapter(mAdapter);
+
+        //
+        mTransitionWrapper = TransitionWrapper.newInstance(mFab);
 
         // Root sdcard
         mCurrentFolder = Environment.getExternalStorageDirectory();
@@ -131,6 +135,16 @@ public class FolderPickerFragment extends BaseFragment {
 
     private void updateChipsView() {
         mChipsView.setVisibility(mChipsView.getChildCount() > 0 ? View.VISIBLE : View.GONE);
+
+        if (!mSelectedFolders.isEmpty()) {
+            if (mFab.getVisibility() != View.VISIBLE) {
+                AnimUtils.bounceIn(mFab);
+            }
+        } else {
+            if (mFab.getVisibility() != View.INVISIBLE) {
+                AnimUtils.bounceOut(mFab);
+            }
+        }
     }
 
     private FileFilter mFilter = new FileFilter() {
@@ -151,10 +165,9 @@ public class FolderPickerFragment extends BaseFragment {
     private FilesAdapter.OnCheckedListener mCheckedListener = new FilesAdapter.OnCheckedListener() {
         @Override
         public void onChecked(int position, boolean checked) {
-            Log.d("Default", "onChecked pos=" + position + " checked=" + checked);
             final File file = (File) mAdapter.getItem(position);
 
-            Utils.beginDelayedTransition((ViewGroup) getView());
+            Utils.beginDelayedTransition((ViewGroup) getView(), mTransitionWrapper.getTransition());
             if (checked) {
                 addFolder(file);
             } else {
@@ -181,4 +194,41 @@ public class FolderPickerFragment extends BaseFragment {
             return f1.getName().compareTo(f2.getName());
         }
     };
+
+    public static abstract class TransitionWrapper {
+        public static TransitionWrapper newInstance(FloatingActionButton fab) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                return new RealTransition(fab);
+            } else {
+                return new DummyTransitionWrapper(fab);
+            }
+        }
+        public abstract Transition getTransition();
+    }
+
+    public static class RealTransition extends TransitionWrapper {
+
+        private final Transition mTransition;
+
+        @TargetApi(Build.VERSION_CODES.KITKAT)
+        public RealTransition(FloatingActionButton fab) {
+            mTransition = new AutoTransition().excludeTarget(fab, true);
+        }
+
+        @Override
+        public Transition getTransition() {
+            return mTransition;
+        }
+    }
+
+    public static class DummyTransitionWrapper extends TransitionWrapper {
+
+        public DummyTransitionWrapper(FloatingActionButton fab) {
+        }
+
+        @Override
+        public Transition getTransition() {
+            return null;
+        }
+    }
 }

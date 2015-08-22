@@ -16,6 +16,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import sk.ursus.bigfilesfinder.model.FilePath;
+import sk.ursus.bigfilesfinder.util.BroadcastUtils;
+import sk.ursus.bigfilesfinder.util.FilesBoundedPriorityQueue;
+import sk.ursus.bigfilesfinder.util.NotificationUtils;
+
 /**
  * Created by ursusursus on 17.8.2015.
  */
@@ -26,6 +31,10 @@ public class FinderService extends Service {
     private static final String ACTION_FIND_LARGEST_FILES = "sk.ursus.bigfilesfinder.ACTION_FIND_LARGEST_FILES";
     private static final String EXTRA_LARGEST_COUNT = "largest_count";
     private static final String EXTRA_FOLDERS = "folder_names";
+
+    public static final int ERROR_INVALID_INPUT = 123;
+    public static final int ERROR_NO_VALID_FOLDERS = 124;
+    public static final int ERROR_TASKS_RUNNING = 125;
 
     private NotificationManager mNotificationManager;
     private Set<FindLargestFilesTask> mTasksInFlight;
@@ -65,19 +74,58 @@ public class FinderService extends Service {
     }
 
     private void findLargestFiles(Intent intent) {
+        // Check for tasks still running
         if(mTasksInFlight != null && !mTasksInFlight.isEmpty()) {
-            // Some tasks are still running, ignoring...
+            BroadcastUtils.sendSearchError(this, ERROR_TASKS_RUNNING);
             return;
         }
 
+        // Check for invalid input
         final int countOfLargest = intent.getIntExtra(EXTRA_LARGEST_COUNT, -1);
         final ArrayList<FilePath> folders = intent.getParcelableArrayListExtra(EXTRA_FOLDERS);
         if (countOfLargest == -1 || folders == null || folders.size() <= 0) {
-            // error: invalid input
+            BroadcastUtils.sendSearchError(this, ERROR_INVALID_INPUT);
             return;
         }
 
-        doFindLargestFiles(countOfLargest, folders);
+        optimize(folders);
+        // doFindLargestFiles(countOfLargest, folders);
+    }
+
+    private void optimize(ArrayList<FilePath> folders) {
+//        for(int i = 0; i < folders.size(); i++) {
+//            for(int j = 0; j < folders.size(); j++) {
+//                if(folders.get(i).folders.get(j)
+//            }
+//        }
+
+//        ArrayList<FilePath> copy = new ArrayList<FilePath>(folders);
+//        for (int i = 0; i < copy.size(); i++) {
+//             if(i % 2 == 0) {
+//                folders.remove(copy.get(i));
+//             }
+//        }
+
+        final ArrayList<FilePath> toRemove = new ArrayList<>();
+        for (int i = 0; i < folders.size(); i++) {
+            for (int j = 0; j < folders.size(); j++) {
+                if(folders.get(j).getPath().startsWith(folders.get(i).getPath())) {
+                    toRemove.add(folders.get(j));
+                    break;
+                }
+            }
+        }
+
+        HashSet<FilePath> set = new HashSet<FilePath>();
+        set.contains()
+
+        for (FilePath folder : toRemove) {
+            Log.d("Default", "FOLDER=" + folder.getPath());
+        }
+
+        // two nested loops
+        // if a.startsWith(me)
+        //    list.remove(a)
     }
 
     private void doFindLargestFiles(int countOfLargest, ArrayList<FilePath> folders) {
@@ -90,6 +138,7 @@ public class FinderService extends Service {
         Log.d("Default", "START");
         mStart = System.currentTimeMillis();
 
+        // Launch search async task per folder
         for (int i = 0; i < folders.size(); i++) {
             final File folder = folders.get(i).toFile();
 
@@ -101,7 +150,7 @@ public class FinderService extends Service {
         }
 
         if (mTasksInFlight.isEmpty()) {
-            // error: no valid folders
+            BroadcastUtils.sendSearchError(this, ERROR_NO_VALID_FOLDERS);
         }
     }
 
@@ -121,25 +170,15 @@ public class FinderService extends Service {
 
     private void handleAllTasksFinished() {
         final ArrayList<File> largestFiles = mFilesPriorityQueue.toList();
-//        Log.d("Default", "SIZE=" + largestFiles.size());
-//        for (File file : largestFiles) {
-//            Log.d("Default", "F=" + file.getAbsolutePath() + " SIZE=" + bytesToMegabytes(file.length()));
-//        }
 
         long time = System.currentTimeMillis() - mStart;
         Log.d("Default", "END      TOOK=" + time + "ms");
 
-        // Broadcast
         BroadcastUtils.sendSearchFinished(this, largestFiles);
-
         NotificationUtils.cancelProgressNotif(mNotificationManager);
         NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
 
         stopSelf();
-    }
-
-    private long bytesToMegabytes(long bytes) {
-        return bytes / (1024 * 1024);
     }
 
     private class FindLargestFilesTask extends AsyncTask<File, Void, List<File>> {
@@ -150,6 +189,8 @@ public class FinderService extends Service {
             if (params.length >= 0) {
                 final File folder = params[0];
                 if (folder != null && folder.exists() && folder.isDirectory()) {
+                    // Dive in and go through all the files in given
+                    // subfolder tree
                     collectFiles(folder, mFilesPriorityQueue);
                 }
             }

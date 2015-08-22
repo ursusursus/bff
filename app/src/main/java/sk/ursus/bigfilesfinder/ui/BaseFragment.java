@@ -1,4 +1,4 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.ui;
 
 import android.app.Activity;
 import android.support.v4.app.Fragment;

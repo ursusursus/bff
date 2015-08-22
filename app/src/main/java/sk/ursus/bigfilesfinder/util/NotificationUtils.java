@@ -1,4 +1,4 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.util;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -6,6 +6,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
+
+import sk.ursus.bigfilesfinder.R;
+import sk.ursus.bigfilesfinder.ui.MainActivity;
 
 /**
  * Created by ursusursus on 17.8.2015.

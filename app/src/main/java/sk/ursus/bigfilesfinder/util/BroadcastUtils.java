@@ -1,4 +1,4 @@
-package sk.ursus.bigfilesfinder;
+package sk.ursus.bigfilesfinder.util;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,6 +6,8 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.File;
 import java.util.ArrayList;
+
+import sk.ursus.bigfilesfinder.model.FilePath;
 
 /**
  * Created by ursusursus on 17.8.2015.
