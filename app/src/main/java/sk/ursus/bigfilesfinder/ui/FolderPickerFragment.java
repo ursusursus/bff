@@ -23,10 +23,10 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 
-import sk.ursus.bigfilesfinder.util.AnimUtils;
 import sk.ursus.bigfilesfinder.FileChipsView;
-import sk.ursus.bigfilesfinder.adapter.FilesAdapter;
 import sk.ursus.bigfilesfinder.R;
+import sk.ursus.bigfilesfinder.adapter.FilesAdapter;
+import sk.ursus.bigfilesfinder.util.AnimUtils;
 import sk.ursus.bigfilesfinder.util.Utils;
 
 /**
@@ -35,9 +35,12 @@ import sk.ursus.bigfilesfinder.util.Utils;
 public class FolderPickerFragment extends BaseFragment implements MainActivity.BackListener {
 
     public static final String TAG = "file_picker";
+    private static final String EXTRA_SELECTED_PATHS = "selected_paths";
+    private static final String EXTRA_CURRENT_FOLDER = "current_folder";
+
     private FilesAdapter mAdapter;
     private File mCurrentFolder;
-    private HashSet<File> mSelectedFolders;
+    private HashSet<String> mSelectedPaths;
     private FileChipsView mChipsView;
     private Toolbar mToolbar;
     private FloatingActionButton mFab;
@@ -51,7 +54,11 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mSelectedFolders = new HashSet<>();
+        if (savedInstanceState != null) {
+            mSelectedPaths = (HashSet<String>) savedInstanceState.getSerializable(EXTRA_SELECTED_PATHS);
+        } else {
+            mSelectedPaths = new HashSet<>();
+        }
     }
 
     @Override
@@ -93,7 +100,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity) getActivity()).onFolderPickerFragmentFinished(mSelectedFolders);
+                ((MainActivity) getActivity()).onFolderPickerFragmentFinished(mSelectedPaths);
             }
         });
 
@@ -105,9 +112,14 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         //
         mTransitionWrapper = TransitionWrapper.newInstance(mFab);
 
-        // Root sdcard
-        mCurrentFolder = Environment.getExternalStorageDirectory();
+        if (savedInstanceState != null && savedInstanceState.getString(EXTRA_CURRENT_FOLDER) != null) {
+            mCurrentFolder = new File(savedInstanceState.getString(EXTRA_CURRENT_FOLDER));
+        } else {
+            // "Root"
+            mCurrentFolder = Environment.getExternalStorageDirectory();
+        }
         navigateIn(mCurrentFolder);
+        updateChipsView();
     }
 
     private File[] listFolders(File file) {
@@ -125,6 +137,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         }
 
         Arrays.sort(files, ALPHABETICAL_ORDER);
+        mAdapter.setSelected(mSelectedPaths);
         mAdapter.setFiles(files);
         mAdapter.notifyDataSetChanged();
 
@@ -146,16 +159,16 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     }
 
     private void updateChipsView() {
-        mChipsView.setVisibility(mChipsView.getChildCount() > 0 ? View.VISIBLE : View.GONE);
-
-        if (!mSelectedFolders.isEmpty()) {
+        if (!mSelectedPaths.isEmpty()) {
             if (mFab.getVisibility() != View.VISIBLE) {
                 AnimUtils.bounceIn(mFab);
             }
+            mChipsView.setVisibility(View.VISIBLE);
         } else {
             if (mFab.getVisibility() != View.INVISIBLE) {
                 AnimUtils.bounceOut(mFab);
             }
+            mChipsView.setVisibility(View.GONE);
         }
     }
 
@@ -185,18 +198,33 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
             } else {
                 removeFolder(file);
             }
-            updateChipsView();
+            update();
         }
     };
 
+    private void update() {
+        updateChipsView();
+        mAdapter.setSelected(mSelectedPaths);
+        mAdapter.notifyDataSetChanged();
+    }
+
     private void removeFolder(File file) {
-        mSelectedFolders.remove(file);
+        mSelectedPaths.remove(file.getAbsolutePath());
         mChipsView.remove(file);
     }
 
     private void addFolder(File file) {
-        mSelectedFolders.add(file);
+        mSelectedPaths.add(file.getAbsolutePath());
         mChipsView.add(file);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(EXTRA_SELECTED_PATHS, mSelectedPaths);
+        if (mCurrentFolder != null) {
+            outState.putString(EXTRA_CURRENT_FOLDER, mCurrentFolder.getAbsolutePath());
+        }
     }
 
     private static final Comparator<File> ALPHABETICAL_ORDER = new Comparator<File>() {
@@ -215,6 +243,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
                 return new DummyTransitionWrapper(fab);
             }
         }
+
         public abstract Transition getTransition();
     }
 

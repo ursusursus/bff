@@ -1,6 +1,7 @@
 package sk.ursus.bigfilesfinder.adapter;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.HashSet;
 
 import sk.ursus.bigfilesfinder.R;
 
@@ -19,18 +21,27 @@ import sk.ursus.bigfilesfinder.R;
  */
 public class FilesAdapter extends BaseAdapter {
 
-    private final OnCheckedListener mListener;
-
     public interface OnCheckedListener {
         void onChecked(int position, boolean checked);
     }
 
     private final LayoutInflater mInflater;
+    private final OnCheckedListener mListener;
+    private HashSet<String> mSelectedPaths;
+    private Drawable mSwooshDrawable;
+    private Drawable mPlusDrawable;
     private File[] mFiles;
 
     public FilesAdapter(Context context, OnCheckedListener listener) {
         mInflater = LayoutInflater.from(context);
         mListener = listener;
+
+        final Resources res = context.getResources();
+        mPlusDrawable = DrawableCompat.wrap(res.getDrawable(R.drawable.ic_action_add));
+        DrawableCompat.setTint(mPlusDrawable, res.getColor(R.color.gray_foo));
+
+        mSwooshDrawable = DrawableCompat.wrap(context.getResources().getDrawable(R.drawable.ic_action_check));
+        DrawableCompat.setTint(mSwooshDrawable, res.getColor(R.color.orange));
     }
 
     @Override
@@ -46,16 +57,25 @@ public class FilesAdapter extends BaseAdapter {
 
         final File file = (File) getItem(position);
         holder.mTitleTextView.setText(file.getName());
+        if(mSelectedPaths.contains(file.getAbsolutePath())) {
+            holder.mAddImageView.setImageDrawable(mSwooshDrawable);
+        } else {
+            holder.mAddImageView.setImageDrawable(mPlusDrawable);
+        }
         holder.mAddContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mListener != null) {
-                    mListener.onChecked(position, true);
+                    mListener.onChecked(position, !mSelectedPaths.contains(file.getAbsolutePath()));
                 }
             }
         });
 
         return convertView;
+    }
+
+    public void setSelected(HashSet<String> selectedPaths) {
+        mSelectedPaths = selectedPaths;
     }
 
     public void setFiles(File[] files) {
@@ -81,15 +101,12 @@ public class FilesAdapter extends BaseAdapter {
 
         public final TextView mTitleTextView;
         private final ViewGroup mAddContainer;
+        private final ImageView mAddImageView;
 
         public ViewHolder(View view) {
             mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
             mAddContainer = (ViewGroup) view.findViewById(R.id.addContainer);
-
-            final ImageView mAddImageView = (ImageView) view.findViewById(R.id.addImageView);
-            Drawable d = mAddImageView.getDrawable();
-            d = DrawableCompat.wrap(d);
-            DrawableCompat.setTint(d, view.getResources().getColor(R.color.gray_foo));
+            mAddImageView = (ImageView) view.findViewById(R.id.addImageView);
         }
 
     }

@@ -52,6 +52,7 @@ public class WelcomeFragment extends BaseFragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // FinderService.launch(getActivity(), 0, new ArrayList<String>());
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     AnimUtils.reveal(getResources(), fab, revealView, new Runnable() {
                         @Override
@@ -62,17 +63,6 @@ public class WelcomeFragment extends BaseFragment {
                 } else {
                     ((MainActivity) getActivity()).onWelcomeFragmentFinished();
                 }
-
-//                int countOfLargest = 10;
-//                // potom este check na null fily bude treba
-//                ArrayList<FilePath> folders = new ArrayList<>();
-//                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-//                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-//                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-//                folders.add(FilePath.fromFile(Environment.getDataDirectory()));
-//                folders.add(FilePath.fromFile(Environment.getDataDirectory()));
-//
-//                FinderService.launch(getActivity(), countOfLargest, folders);
             }
         });
 

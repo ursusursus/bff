@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import sk.ursus.bigfilesfinder.FinderService;
 import sk.ursus.bigfilesfinder.R;
 import sk.ursus.bigfilesfinder.adapter.ResultsAdapter;
-import sk.ursus.bigfilesfinder.model.FilePath;
+import sk.ursus.bigfilesfinder.model.FooBarFile;
 import sk.ursus.bigfilesfinder.util.AnimUtils;
 import sk.ursus.bigfilesfinder.util.BroadcastUtils;
 
@@ -31,12 +31,17 @@ import sk.ursus.bigfilesfinder.util.BroadcastUtils;
 public class ResultsFragment extends BaseFragment {
 
     public static final String TAG = "results_fragment";
+    private static final String EXTRA_RESULTS = "results";
+    private static final String EXTRA_WAS_LOADING = "was_loading";
+    private static final String EXTRA_WAS_ERROR = "was_error";
+    private static final String EXTRA_ERROR_CODE = "error_code";
 
     private ResultsAdapter mAdapter;
     private ListView mListView;
     private ProgressBar mProgressBar;
     private TextView mErrorTextView;
     private FloatingActionButton mFab;
+    private int mErrorCode;
 
     public static ResultsFragment newInstance() {
         return new ResultsFragment();
@@ -75,9 +80,31 @@ public class ResultsFragment extends BaseFragment {
 
         mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         mErrorTextView = (TextView) view.findViewById(R.id.errorTextView);
-
-        mAdapter = new ResultsAdapter(getActivity());
         mListView = (ListView) view.findViewById(R.id.listView);
+        mAdapter = new ResultsAdapter(getActivity());
+
+        if (savedInstanceState != null) {
+            // Progress bar
+            final boolean wasLoading = savedInstanceState.getBoolean(EXTRA_WAS_LOADING);
+            if (wasLoading) {
+                mProgressBar.setVisibility(View.VISIBLE);
+            }
+
+            // Error
+            final boolean wasError = savedInstanceState.getBoolean(EXTRA_WAS_ERROR);
+            if (wasError) {
+                mErrorTextView.setVisibility(View.VISIBLE);
+                displayError(savedInstanceState.getInt(EXTRA_ERROR_CODE));
+            }
+
+            // List
+            final ArrayList<FooBarFile> results = savedInstanceState.getParcelableArrayList(EXTRA_RESULTS);
+            if (results != null) {
+                mAdapter.setFooBars(savedInstanceState.<FooBarFile>getParcelableArrayList(EXTRA_RESULTS));
+                mFab.setVisibility(View.VISIBLE);
+            }
+        }
+
         mListView.setAdapter(mAdapter);
     }
 
@@ -85,6 +112,15 @@ public class ResultsFragment extends BaseFragment {
     public void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mReceiver);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(EXTRA_RESULTS, mAdapter.getFooBars());
+        outState.putBoolean(EXTRA_WAS_LOADING, mProgressBar.getVisibility() == View.VISIBLE);
+        outState.putBoolean(EXTRA_WAS_ERROR, mErrorTextView.getVisibility() == View.VISIBLE);
+        outState.putInt(EXTRA_ERROR_CODE, mErrorCode);
     }
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -117,31 +153,34 @@ public class ResultsFragment extends BaseFragment {
         private void handleLargestFilesError(Intent intent) {
             mProgressBar.setVisibility(View.GONE);
             mErrorTextView.setVisibility(View.VISIBLE);
-
-            final int errorCode = intent.getIntExtra(BroadcastUtils.EXTRA_ERROR, 0);
-            switch (errorCode) {
-                case FinderService.ERROR_INVALID_INPUT:
-                    mErrorTextView.setText(R.string.error_invalid_input);
-                    break;
-                case FinderService.ERROR_TASKS_RUNNING:
-                    mErrorTextView.setText(R.string.error_tasks_still_running);
-                    break;
-                case FinderService.ERROR_NO_VALID_FOLDERS:
-                    mErrorTextView.setText(R.string.error_no_valid_folders);
-                    break;
-                default:
-                    mErrorTextView.setText(R.string.error_default);
-            }
+            displayError(intent.getIntExtra(BroadcastUtils.EXTRA_ERROR, 0));
         }
 
         private void handleLargestFilesFound(Intent intent) {
-            final ArrayList<FilePath> filePaths = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
-            mAdapter.clear();
-            mAdapter.addAll(filePaths);
+            final ArrayList<FooBarFile> filePaths = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
+            mAdapter.setFooBars(filePaths);
+            mAdapter.notifyDataSetChanged();
 
             AnimUtils.crossfade(mListView, mProgressBar);
             AnimUtils.bounceIn(mFab);
         }
 
     };
+
+    private void displayError(int errorCode) {
+        switch (errorCode) {
+            case FinderService.ERROR_INVALID_INPUT:
+                mErrorTextView.setText(R.string.error_invalid_input);
+                break;
+            case FinderService.ERROR_TASKS_RUNNING:
+                mErrorTextView.setText(R.string.error_tasks_still_running);
+                break;
+            case FinderService.ERROR_NO_VALID_FOLDERS:
+                mErrorTextView.setText(R.string.error_no_valid_folders);
+                break;
+            default:
+                mErrorTextView.setText(R.string.error_default);
+        }
+        mErrorCode = errorCode;
+    }
 }

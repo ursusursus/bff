@@ -7,7 +7,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import java.io.File;
 import java.util.ArrayList;
 
-import sk.ursus.bigfilesfinder.model.FilePath;
+import sk.ursus.bigfilesfinder.model.FooBarFile;
 
 /**
  * Created by ursusursus on 17.8.2015.
@@ -22,9 +22,9 @@ public class BroadcastUtils {
     public static final String EXTRA_ERROR = "error";
 
     public static void sendSearchFinished(Context context, ArrayList<File> files) {
-        final ArrayList<FilePath> filePaths = new ArrayList<FilePath>(files.size());
+        final ArrayList<FooBarFile> filePaths = new ArrayList<FooBarFile>(files.size());
         for (int i = 0; i < files.size(); i++) {
-             filePaths.add(FilePath.fromFile(files.get(i)));
+             filePaths.add(FooBarFile.fromFile(files.get(i)));
 
         }
         final Intent intent = new Intent(ACTION_SEARCH_FINISHED)

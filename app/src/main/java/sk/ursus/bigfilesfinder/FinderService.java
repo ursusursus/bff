@@ -13,11 +13,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import sk.ursus.bigfilesfinder.model.FilePath;
 import sk.ursus.bigfilesfinder.util.BroadcastUtils;
 import sk.ursus.bigfilesfinder.util.FilesBoundedPriorityQueue;
 import sk.ursus.bigfilesfinder.util.NotificationUtils;
@@ -43,7 +41,7 @@ public class FinderService extends Service {
     private long mStart;
 
 
-    public static void launch(Context context, int countOfLargest, ArrayList<FilePath> folders) {
+    public static void launch(Context context, int countOfLargest, ArrayList<String> folders) {
         final Intent intent = new Intent(context, FinderService.class)
                 .setAction(ACTION_FIND_LARGEST_FILES)
                 .putExtra(EXTRA_LARGEST_COUNT, countOfLargest)
@@ -83,77 +81,68 @@ public class FinderService extends Service {
 
         // Check for invalid input
         final int countOfLargest = intent.getIntExtra(EXTRA_LARGEST_COUNT, -1);
-        final ArrayList<FilePath> folders = intent.getParcelableArrayListExtra(EXTRA_FOLDERS);
-        if (countOfLargest == -1 || folders == null || folders.size() <= 0) {
-            BroadcastUtils.sendSearchError(this, ERROR_INVALID_INPUT);
-            return;
-        }
+        ArrayList<String> folderPaths = intent.getStringArrayListExtra(EXTRA_FOLDERS);
+//        if (countOfLargest == -1 || folderPaths == null || folderPaths.size() <= 0) {
+//            BroadcastUtils.sendSearchError(this, ERROR_INVALID_INPUT);
+//            return;
+//        }
 
-        // optimize(folders);
-        doFindLargestFiles(countOfLargest, folders);
+//        folderPaths = new ArrayList<String>();
+//        folderPaths.add("/sdcard");
+//        folderPaths.add("/0");
+//        folderPaths.add("/sdcard/data");
+//        folderPaths.add("/banana");
+//        folderPaths.add("/banana");
+//        folderPaths.add("/banana");
+//        folderPaths.add("/bdasdsaanana");
+//        folderPaths.add("/sdcard/data/foo");
+//        folderPaths.add("/sdcard/data/foo/bar");
+//        folderPaths.add("/sdcard/bar");
+        removeDuplicatesAndSelfSubdirectories(folderPaths);
+        doFindLargestFiles(5, folderPaths);
     }
 
-    private void optimize(ArrayList<FilePath> folders) {
-//        for(int i = 0; i < folders.size(); i++) {
-//            for(int j = 0; j < folders.size(); j++) {
-//                if(folders.get(i).folders.get(j)
+    /**
+     * Because it doesn't make sense to search a directory
+     * if we will search it's superdirectory too
+     */
+    private void removeDuplicatesAndSelfSubdirectories(ArrayList<String> folderPaths) {
+        // Remove duplicates
+        // cyklus nad arraylistom filov
+        // if exists and is directory
+        //   add
+        final HashSet<String> set = new HashSet<>(folderPaths);
+//        for(int i = 0; i < folderPaths.size(); i++) {
+//            final File folder = new File(folderPaths.get(i));
+//            if (folder.exists() && folder.isDirectory()) {
+//                set.add(folder);
 //            }
 //        }
+        folderPaths.clear();
+        folderPaths.addAll(set);
+        set.clear();
 
-//        ArrayList<FilePath> copy = new ArrayList<FilePath>(folders);
-//        for (int i = 0; i < copy.size(); i++) {
-//             if(i % 2 == 0) {
-//                folders.remove(copy.get(i));
-//             }
-//        }
-
-        ArrayList<String> list = new ArrayList<String>();
-        list.add("/sdcard/");
-        list.add("/0/");
-        list.add("/sdcard/data/");
-        list.add("/banana/");
-        list.add("/sdcard/data/foo/");
-        list.add("/sdcard/bar/");
-
-//        for (int i = list.size() - 1; i >= 0; i--) {
-//            for (int j = list.size() - 1; j >= 0; j--) {
-//                if(list.get(j).startsWith(list.get(i))) {
-//                    list.remove(j);
-//                }
-//            }
-//        }
-//        final Iterator<String> iteratorOuter = list.iterator();
-//        while(iteratorOuter.hasNext()) {
-//            String sOuter = iteratorOuter.next();
-//
-//            final Iterator<String> iteratorInner = list.iterator();
-//            while(iteratorInner.hasNext()) {
-//                String sInner = iteratorInner.next();
-//                if(sInner.startsWith(sOuter) && !sOuter.equals(sInner)) {
-//                    iteratorInner.remove();
-//                    // Log.d("Default", "DISSING" + sInner);
-//                }
-//            }
-//        }
-
-        for (Iterator<String> ito = list.iterator(); ito.hasNext();){
-            for (Iterator<String> iti = list.iterator(); iti.hasNext();){
-                if(iti.next().startsWith("/sdcard")) {
-                    iti.remove();
+        // Collect all self-subdirectories
+        final String trailingSlash = File.separator;
+        for (int i = 0; i < folderPaths.size(); i++) {
+            // File.getAbsolutePath() doesn't add a trailing slash
+            // on a directory...and we need that to distinguish
+            // between "foo/bar/" and "/foo/barred/"
+            final String fi = folderPaths.get(i) + trailingSlash;
+            for (int j = 0; j < folderPaths.size(); j++) {
+                if (j == i) {
+                    continue;
+                }
+                final String fj = folderPaths.get(j) + trailingSlash;
+                if (fj.startsWith(fi)) {
+                    set.add(folderPaths.get(j));
                 }
             }
         }
-
-        for (String s : list) {
-            Log.d("Default", "s=" + s);
-        }
-
-        // two nested loops
-        // if a.startsWith(me)
-        //    list.remove(a)
+        folderPaths.removeAll(set);
     }
 
-    private void doFindLargestFiles(int countOfLargest, ArrayList<FilePath> folders) {
+    private void doFindLargestFiles(int countOfLargest, ArrayList<String> folders) {
         BroadcastUtils.sendSearchStarted(this);
         NotificationUtils.cancelFinishedNotif(mNotificationManager);
         NotificationUtils.showProgressNotif(this, mNotificationManager);
@@ -166,7 +155,7 @@ public class FinderService extends Service {
 
         // Launch search async task per folder
         for (int i = 0; i < folders.size(); i++) {
-            final File folder = folders.get(i).toFile();
+            final File folder = new File(folders.get(i));
 
             if (folder.exists() && folder.isDirectory()) {
                 final FindLargestFilesTask task = new FindLargestFilesTask();

@@ -41,7 +41,8 @@ public class NotificationUtils {
                 .setContentIntent(prepareIntent(context))
                 .setColor(context.getResources().getColor(R.color.orange))
                 .setContentTitle(context.getString(R.string.finished_notif_title))
-                .setContentText(context.getString(R.string.finished_notif_text))
+                .setContentText(context.getString(R.string.app_name))
+                .setAutoCancel(true)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .build();
         nm.notify(FINISHED_NOTIF_ID, notification);

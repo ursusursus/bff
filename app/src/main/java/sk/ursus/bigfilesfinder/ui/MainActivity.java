@@ -1,30 +1,30 @@
 package sk.ursus.bigfilesfinder.ui;
 
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
 import sk.ursus.bigfilesfinder.FinderService;
 import sk.ursus.bigfilesfinder.R;
-import sk.ursus.bigfilesfinder.model.FilePath;
 
 public class MainActivity extends AppCompatActivity {
+
+
+    private static final String EXTRA_SELECTED_PATHS = "dsadasdsa";
+    private static final String EXTRA_COUNT = "dwqdwqdwq";
 
     public interface BackListener {
         boolean onBackPressed();
     }
 
     private BackListener mBackListener;
-    private ArrayList<FilePath> mSelectedFoldersList;
+    private ArrayList<String> mSelectedPaths;
     private int mCount;
 
     @Override
@@ -34,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG, false);
+        } else {
+            mSelectedPaths = (ArrayList<String>) savedInstanceState.getStringArrayList(EXTRA_SELECTED_PATHS);
+            mCount = savedInstanceState.getInt(EXTRA_COUNT);
         }
     }
 
@@ -55,17 +58,14 @@ public class MainActivity extends AppCompatActivity {
         swap(FolderPickerFragment.newInstance(), FolderPickerFragment.TAG);
     }
 
-    public void onFolderPickerFragmentFinished(HashSet<File> selectedFolders) {
-        Log.d("Default", "DONE=" + selectedFolders.size());
-        ArrayList<FilePath> filepaths = new ArrayList<>();
-        final Iterator<File> iter = selectedFolders.iterator();
+    public void onFolderPickerFragmentFinished(HashSet<String> selectedPathsSet) {
+        final ArrayList<String> selectedPaths = new ArrayList<>();
+        final Iterator<String> iter = selectedPathsSet.iterator();
         while (iter.hasNext()) {
-            File file = iter.next();
-            filepaths.add(FilePath.fromFile(file));
-            Log.d("Default", "FILE=" + file.getAbsolutePath());
+            selectedPaths.add(iter.next());
         }
 
-        mSelectedFoldersList = filepaths;
+        mSelectedPaths = selectedPaths;
         swap(CountPickerFragment.newInstance(), CountPickerFragment.TAG);
     }
 
@@ -73,12 +73,12 @@ public class MainActivity extends AppCompatActivity {
         mCount = count;
         swap(ResultsFragment.newInstance(), ResultsFragment.TAG);
 
-        FinderService.launch(MainActivity.this, mCount, mSelectedFoldersList);
+        FinderService.launch(MainActivity.this, mCount, mSelectedPaths);
     }
 
     public void onResultsFragmentFinished() {
         mCount = 0;
-        mSelectedFoldersList.clear();
+        mSelectedPaths.clear();
         swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG);
     }
 
@@ -121,6 +121,13 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList(EXTRA_SELECTED_PATHS, mSelectedPaths);
+        outState.putInt(EXTRA_COUNT, mCount);
+    }
+
     public void registerBackListener(BackListener listener) {
         mBackListener = listener;
     }
@@ -130,14 +137,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void foobar() {
-        int countOfLargest = 10;
-        // potom este check na null fily bude treba
-        ArrayList<FilePath> folders = new ArrayList<>();
-        folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-        folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-        folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-        folders.add(FilePath.fromFile(Environment.getDataDirectory()));
-
-        FinderService.launch(this, countOfLargest, folders);
+//        int countOfLargest = 10;
+//        // potom este check na null fily bude treba
+//        ArrayList<FooBarFile> folders = new ArrayList<>();
+//        folders.add(FooBarFile.fromFile(Environment.getExternalStorageDirectory()));
+//        folders.add(FooBarFile.fromFile(Environment.getExternalStorageDirectory()));
+//        folders.add(FooBarFile.fromFile(Environment.getExternalStorageDirectory()));
+//        folders.add(FooBarFile.fromFile(Environment.getDataDirectory()));
+//
+//        FinderService.launch(this, countOfLargest, folders);
     }
 }
