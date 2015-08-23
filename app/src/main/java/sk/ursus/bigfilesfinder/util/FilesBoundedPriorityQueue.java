@@ -22,23 +22,21 @@ public class FilesBoundedPriorityQueue extends PriorityQueue<File> {
     @Override
     public boolean add(File file) {
         synchronized (sLock) {
-            if (!contains(file)) {
-                if (size() < mBoundedSize) {
-                    super.add(file);
-                    return true;
+            if (size() < mBoundedSize) {
+                super.add(file);
+                return true;
 
-                } else {
-                    if (file.length() >= peek().length()) {
-                        // If input item is bigger or equal than tip,
-                        // add it to queue, and release the smallest one (tip).
-                        // That way we will end up with N largest items ever
-                        // added to queue.
-                        // It should be a big faster and much more
-                        // memory efficient
-                        super.add(file);
-                        poll();
-                        return true;
-                    }
+            } else {
+                if (file.length() >= peek().length()) {
+                    // If input item is bigger or equal than tip,
+                    // add it to queue, and release the smallest one (tip).
+                    // That way we will end up with N largest items ever
+                    // added to queue.
+                    // It should be a big faster and much more
+                    // memory efficient
+                    super.add(file);
+                    poll();
+                    return true;
                 }
             }
         }
