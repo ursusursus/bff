@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -82,67 +83,64 @@ public class FinderService extends Service {
         // Check for invalid input
         final int countOfLargest = intent.getIntExtra(EXTRA_LARGEST_COUNT, -1);
         ArrayList<String> folderPaths = intent.getStringArrayListExtra(EXTRA_FOLDERS);
-//        if (countOfLargest == -1 || folderPaths == null || folderPaths.size() <= 0) {
-//            BroadcastUtils.sendSearchError(this, ERROR_INVALID_INPUT);
-//            return;
-//        }
+        if (countOfLargest == -1 || folderPaths == null || folderPaths.size() <= 0) {
+            BroadcastUtils.sendSearchError(this, ERROR_INVALID_INPUT);
+            return;
+        }
 
-//        folderPaths = new ArrayList<String>();
-//        folderPaths.add("/sdcard");
-//        folderPaths.add("/0");
-//        folderPaths.add("/sdcard/data");
-//        folderPaths.add("/banana");
-//        folderPaths.add("/banana");
-//        folderPaths.add("/banana");
-//        folderPaths.add("/bdasdsaanana");
-//        folderPaths.add("/sdcard/data/foo");
-//        folderPaths.add("/sdcard/data/foo/bar");
-//        folderPaths.add("/sdcard/bar");
-        removeDuplicatesAndSelfSubdirectories(folderPaths);
-        doFindLargestFiles(5, folderPaths);
+        final ArrayList<File> folders = removeDuplicatesAndSelfSubdirectories2(folderPaths);
+        doFindLargestFiles(5, folders);
     }
 
     /**
      * Because it doesn't make sense to search a directory
      * if we will search it's superdirectory too
      */
-    private void removeDuplicatesAndSelfSubdirectories(ArrayList<String> folderPaths) {
-        // Remove duplicates
-        // cyklus nad arraylistom filov
-        // if exists and is directory
-        //   add
-        final HashSet<String> set = new HashSet<>(folderPaths);
-//        for(int i = 0; i < folderPaths.size(); i++) {
-//            final File folder = new File(folderPaths.get(i));
-//            if (folder.exists() && folder.isDirectory()) {
-//                set.add(folder);
-//            }
-//        }
-        folderPaths.clear();
-        folderPaths.addAll(set);
+    private ArrayList<File> removeDuplicatesAndSelfSubdirectories2(ArrayList<String> paths) {
+        // Remove duplicates and non-sense
+        final HashSet<File> set = new HashSet<>();
+        for (int i = 0; i < paths.size(); i++) {
+            final File folder = new File(paths.get(i));
+            if (folder.exists() && folder.isDirectory()) {
+                set.add(folder);
+            }
+        }
+        final ArrayList<File> folders = new ArrayList<>(set);
         set.clear();
 
         // Collect all self-subdirectories
         final String trailingSlash = File.separator;
-        for (int i = 0; i < folderPaths.size(); i++) {
-            // File.getAbsolutePath() doesn't add a trailing slash
-            // on a directory...and we need that to distinguish
-            // between "foo/bar/" and "/foo/barred/"
-            final String fi = folderPaths.get(i) + trailingSlash;
-            for (int j = 0; j < folderPaths.size(); j++) {
-                if (j == i) {
-                    continue;
+        for (int i = 0; i < folders.size(); i++) {
+            // File.getCanonicalPath() doesn't add a trailing slash
+            // on a directory...and we need that, because
+            // "foo/bar" could then appear as superdirectory of "/foo/barred"
+
+            // BTW getCanonicalPath resolves all symlinks, ".", etc. which needed
+            // when comparing paths, but is more expensive
+            try {
+                final String fi = folders.get(i).getCanonicalPath() + trailingSlash;
+                for (int j = 0; j < folders.size(); j++) {
+                    if (j == i) {
+                        continue;
+                    }
+                    try {
+                        final String fj = folders.get(j).getCanonicalPath() + trailingSlash;
+                        if (fj.startsWith(fi)) {
+                            set.add(folders.get(j));
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-                final String fj = folderPaths.get(j) + trailingSlash;
-                if (fj.startsWith(fi)) {
-                    set.add(folderPaths.get(j));
-                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        folderPaths.removeAll(set);
+        folders.removeAll(set);
+        return folders;
     }
 
-    private void doFindLargestFiles(int countOfLargest, ArrayList<String> folders) {
+    private void doFindLargestFiles(int countOfLargest, ArrayList<File> folders) {
         BroadcastUtils.sendSearchStarted(this);
         NotificationUtils.cancelFinishedNotif(mNotificationManager);
         NotificationUtils.showProgressNotif(this, mNotificationManager);
@@ -155,13 +153,9 @@ public class FinderService extends Service {
 
         // Launch search async task per folder
         for (int i = 0; i < folders.size(); i++) {
-            final File folder = new File(folders.get(i));
-
-            if (folder.exists() && folder.isDirectory()) {
-                final FindLargestFilesTask task = new FindLargestFilesTask();
-                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, folder);
-                mTasksInFlight.add(task);
-            }
+            final FindLargestFilesTask task = new FindLargestFilesTask();
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, folders.get(i));
+            mTasksInFlight.add(task);
         }
 
         if (mTasksInFlight.isEmpty()) {

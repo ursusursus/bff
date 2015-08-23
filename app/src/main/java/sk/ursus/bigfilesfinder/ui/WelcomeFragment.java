@@ -52,7 +52,6 @@ public class WelcomeFragment extends BaseFragment {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // FinderService.launch(getActivity(), 0, new ArrayList<String>());
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     AnimUtils.reveal(getResources(), fab, revealView, new Runnable() {
                         @Override
