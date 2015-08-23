@@ -14,7 +14,6 @@ import android.transition.Transition;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -45,7 +44,6 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     private Toolbar mToolbar;
     private FloatingActionButton mFab;
     private TransitionWrapper mTransitionWrapper;
-    private ListView mListView;
 
     public static FolderPickerFragment newInstance() {
         FolderPickerFragment f = new FolderPickerFragment();
@@ -60,18 +58,6 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         } else {
             mSelectedPaths = new HashSet<>();
         }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        ((MainActivity) getActivity()).registerBackListener(this);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        ((MainActivity) getActivity()).unregisterBackListener(this);
     }
 
     @Nullable
@@ -90,10 +76,10 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         mChipsView = (FileChipsView) view.findViewById(R.id.chipsView);
         mChipsView.setOnDismissListener(new FileChipsView.OnDismissListener() {
             @Override
-            public void onDismiss(File file) {
+            public void onDismiss(String folderPath) {
                 Utils.beginDelayedTransition((ViewGroup) getView(), mTransitionWrapper.getTransition());
-                removeFolder(file);
-                updateChipsView();
+                removeFolder(folderPath);
+                update();
             }
         });
 
@@ -106,7 +92,8 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         });
 
         // Setup recyclerView
-        mAdapter = new FilesAdapter(getActivity(), mAdapterListener);
+        mAdapter = new FilesAdapter(getActivity(), mSelectedPaths, mAdapterListener);
+
         final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.listView);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
@@ -122,7 +109,19 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
             mCurrentFolder = Environment.getExternalStorageDirectory();
         }
         navigateIn(mCurrentFolder);
-        updateChipsView();
+        updateChipsAndFab();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((MainActivity) getActivity()).registerBackListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        ((MainActivity) getActivity()).unregisterBackListener(this);
     }
 
     private File[] listFolders(File file) {
@@ -140,7 +139,6 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         }
 
         Arrays.sort(files, ALPHABETICAL_ORDER);
-        mAdapter.setSelected(mSelectedPaths);
         mAdapter.setFiles(files);
         mAdapter.notifyDataSetChanged();
 
@@ -160,7 +158,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         return false;
     }
 
-    private void updateChipsView() {
+    private void updateChipsAndFab() {
         if (!mSelectedPaths.isEmpty()) {
             if (mFab.getVisibility() != View.VISIBLE) {
                 AnimUtils.bounceIn(mFab);
@@ -189,33 +187,32 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         }
 
         @Override
-        public void onItemChecked(int position, boolean checked) {
-            final File file = mAdapter.getItem(position);
+        public void onSecondaryClick(int position) {
+            final String folderPath = mAdapter.getItem(position).getAbsolutePath();
 
             Utils.beginDelayedTransition((ViewGroup) getView(), mTransitionWrapper.getTransition());
-            if (checked) {
-                addFolder(file);
+            if (!mSelectedPaths.contains(folderPath)) {
+                addFolder(folderPath);
             } else {
-                removeFolder(file);
+                removeFolder(folderPath);
             }
             update();
         }
     };
 
     private void update() {
-        updateChipsView();
-        mAdapter.setSelected(mSelectedPaths);
+        updateChipsAndFab();
         mAdapter.notifyDataSetChanged();
     }
 
-    private void removeFolder(File file) {
-        mSelectedPaths.remove(file.getAbsolutePath());
-        mChipsView.remove(file);
+    private void removeFolder(String folderPath) {
+        mSelectedPaths.remove(folderPath);
+        mChipsView.remove(folderPath);
     }
 
-    private void addFolder(File file) {
-        mSelectedPaths.add(file.getAbsolutePath());
-        mChipsView.add(file);
+    private void addFolder(String folderPath) {
+        mSelectedPaths.add(folderPath);
+        mChipsView.add(folderPath);
     }
 
     @Override

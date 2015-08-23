@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,28 +16,35 @@ import java.io.File;
 import java.util.HashSet;
 
 import sk.ursus.bigfilesfinder.R;
+import sk.ursus.bigfilesfinder.util.Utils;
 
 /**
  * Created by vbrecka on 20.8.2015.
  */
 public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesViewHolder> {
 
+    public void foo() {
+        Log.d("Default", "PRINTING ADAPTER");
+        Utils.foo(mSelectedPaths);
+    }
+
     public interface FiledAdapterListener {
         void onItemClick(int file);
-        void onItemChecked(int position, boolean checked);
+        void onSecondaryClick(int position);
     }
 
     private final LayoutInflater mInflater;
     private final FiledAdapterListener mListener;
 
-    private HashSet<String> mSelectedPaths;
+    private final HashSet<String> mSelectedPaths;
     private File[] mFiles;
 
-    private Drawable mSwooshDrawable;
-    private Drawable mPlusDrawable;
+    private final Drawable mSwooshDrawable;
+    private final Drawable mPlusDrawable;
 
-    public FilesAdapter(Context context, FiledAdapterListener listener) {
+    public FilesAdapter(Context context, HashSet<String> selectedPaths, FiledAdapterListener listener) {
         mInflater = LayoutInflater.from(context);
+        mSelectedPaths = selectedPaths;
         mListener = listener;
 
         final Resources res = context.getResources();
@@ -66,14 +74,6 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesViewHol
         } else {
             holder.mAddImageView.setImageDrawable(mPlusDrawable);
         }
-        holder.mAddContainer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mListener != null) {
-                    mListener.onItemChecked(position, !mSelectedPaths.contains(file.getAbsolutePath()));
-                }
-            }
-        });
     }
 
     public File getItem(int position) {
@@ -83,10 +83,6 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesViewHol
     @Override
     public int getItemCount() {
         return mFiles != null ? mFiles.length : 0;
-    }
-
-    public void setSelected(HashSet<String> selectedPaths) {
-        mSelectedPaths = selectedPaths;
     }
 
     public void setFiles(File[] files) {
@@ -110,8 +106,16 @@ public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesViewHol
                 }
             });
             mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
-            mAddContainer = (ViewGroup) view.findViewById(R.id.addContainer);
             mAddImageView = (ImageView) view.findViewById(R.id.addImageView);
+            mAddContainer = (ViewGroup) view.findViewById(R.id.addContainer);
+            mAddContainer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onSecondaryClick(getAdapterPosition());
+                    }
+                }
+            });
         }
 
     }

@@ -1,6 +1,8 @@
 package sk.ursus.bigfilesfinder;
 
 import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +11,6 @@ import android.widget.TextView;
 
 import org.apmem.tools.layouts.FlowLayout;
 
-import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -18,10 +19,10 @@ import java.util.ArrayList;
 public class FileChipsView extends FlowLayout {
 
     public interface OnDismissListener {
-        void onDismiss(File file);
+        void onDismiss(String folderPath);
     }
 
-    private ArrayList<File> mFiles = new ArrayList<>();
+    private ArrayList<String> mFolderPaths = new ArrayList<>();
     private OnDismissListener mOnDismissListener;
     private LayoutInflater mInflater;
 
@@ -48,31 +49,81 @@ public class FileChipsView extends FlowLayout {
         mInflater = LayoutInflater.from(getContext());
     }
 
-    public void add(final File file) {
+    public void add(final String path) {
         final View childView = mInflater.inflate(R.layout.chip, this, false);
 
         final TextView textView = (TextView) childView.findViewById(R.id.textView);
-        textView.setText(file.getAbsolutePath());
+        textView.setText(path);
 
         final ImageView cancelImageView = (ImageView) childView.findViewById(R.id.cancelImageView);
         cancelImageView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mOnDismissListener != null) {
-                    mOnDismissListener.onDismiss(file);
+                    mOnDismissListener.onDismiss(path);
                 }
             }
         });
 
         addView(childView);
-        mFiles.add(file);
+        mFolderPaths.add(path);
     }
 
-    public void remove(File file) {
-        final int index = mFiles.indexOf(file);
+    public void remove(String folderPath) {
+        final int index = mFolderPaths.indexOf(folderPath);
         if (index >= 0) {
             removeViewAt(index);
-            mFiles.remove(index);
+            mFolderPaths.remove(index);
         }
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        return new SavedState(super.onSaveInstanceState(), mFolderPaths);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if (state == null || !(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        final SavedState savedState = (SavedState) state;
+        for (int i = 0; i < savedState.mFolderPaths.size(); i++) {
+            add(savedState.mFolderPaths.get(i));
+        }
+        super.onRestoreInstanceState(savedState.getSuperState());
+    }
+
+    private static class SavedState extends BaseSavedState {
+        private ArrayList<String> mFolderPaths;
+
+        public SavedState(Parcelable superState, ArrayList<String> folderPaths) {
+            super(superState);
+            mFolderPaths = folderPaths;
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            mFolderPaths = new ArrayList<>();
+            in.readStringList(mFolderPaths);
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeStringList(mFolderPaths);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>() {
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in);
+            }
+
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
     }
 }
