@@ -50,7 +50,7 @@ public class FileChipsView extends FlowLayout {
     }
 
     public void add(final String path) {
-        final View childView = mInflater.inflate(R.layout.chip, this, false);
+        final View childView = mInflater.inflate(R.layout.item_chip, this, false);
 
         final TextView textView = (TextView) childView.findViewById(R.id.textView);
         textView.setText(path);

@@ -5,7 +5,6 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,17 +15,11 @@ import java.io.File;
 import java.util.HashSet;
 
 import sk.ursus.bigfilesfinder.R;
-import sk.ursus.bigfilesfinder.util.Utils;
 
 /**
  * Created by vbrecka on 20.8.2015.
  */
 public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesViewHolder> {
-
-    public void foo() {
-        Log.d("Default", "PRINTING ADAPTER");
-        Utils.foo(mSelectedPaths);
-    }
 
     public interface FiledAdapterListener {
         void onItemClick(int file);

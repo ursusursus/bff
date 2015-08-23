@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import sk.ursus.bigfilesfinder.FinderService;
 import sk.ursus.bigfilesfinder.R;
 import sk.ursus.bigfilesfinder.adapter.ResultsAdapter;
-import sk.ursus.bigfilesfinder.model.FooBarFile;
+import sk.ursus.bigfilesfinder.model.ParcelableFile;
 import sk.ursus.bigfilesfinder.util.AnimUtils;
 import sk.ursus.bigfilesfinder.util.BroadcastUtils;
 
@@ -31,6 +31,7 @@ import sk.ursus.bigfilesfinder.util.BroadcastUtils;
 public class ResultsFragment extends BaseFragment {
 
     public static final String TAG = "results_fragment";
+
     private static final String EXTRA_RESULTS = "results";
     private static final String EXTRA_WAS_LOADING = "was_loading";
     private static final String EXTRA_WAS_ERROR = "was_error";
@@ -98,9 +99,9 @@ public class ResultsFragment extends BaseFragment {
             }
 
             // List
-            final ArrayList<FooBarFile> results = savedInstanceState.getParcelableArrayList(EXTRA_RESULTS);
+            final ArrayList<ParcelableFile> results = savedInstanceState.getParcelableArrayList(EXTRA_RESULTS);
             if (results != null) {
-                mAdapter.setFooBars(savedInstanceState.<FooBarFile>getParcelableArrayList(EXTRA_RESULTS));
+                mAdapter.setFooBars(savedInstanceState.<ParcelableFile>getParcelableArrayList(EXTRA_RESULTS));
                 mFab.setVisibility(View.VISIBLE);
             }
         }
@@ -157,7 +158,7 @@ public class ResultsFragment extends BaseFragment {
         }
 
         private void handleLargestFilesFound(Intent intent) {
-            final ArrayList<FooBarFile> filePaths = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
+            final ArrayList<ParcelableFile> filePaths = intent.getParcelableArrayListExtra(BroadcastUtils.EXTRA_FILES);
             mAdapter.setFooBars(filePaths);
             mAdapter.notifyDataSetChanged();
 

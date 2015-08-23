@@ -3,8 +3,6 @@ package sk.ursus.bigfilesfinder.ui;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -16,8 +14,8 @@ import sk.ursus.bigfilesfinder.R;
 public class MainActivity extends AppCompatActivity {
 
 
-    private static final String EXTRA_SELECTED_PATHS = "dsadasdsa";
-    private static final String EXTRA_COUNT = "dwqdwqdwq";
+    private static final String EXTRA_SELECTED_PATHS = "selected_paths";
+    private static final String EXTRA_COUNT = "count";
 
     public interface BackListener {
         boolean onBackPressed();
@@ -99,29 +97,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            foobar();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putStringArrayList(EXTRA_SELECTED_PATHS, mSelectedPaths);
@@ -134,17 +109,5 @@ public class MainActivity extends AppCompatActivity {
 
     public void unregisterBackListener(BackListener listener) {
         mBackListener = null;
-    }
-
-    private void foobar() {
-//        int countOfLargest = 10;
-//        // potom este check na null fily bude treba
-//        ArrayList<FooBarFile> folders = new ArrayList<>();
-//        folders.add(FooBarFile.fromFile(Environment.getExternalStorageDirectory()));
-//        folders.add(FooBarFile.fromFile(Environment.getExternalStorageDirectory()));
-//        folders.add(FooBarFile.fromFile(Environment.getExternalStorageDirectory()));
-//        folders.add(FooBarFile.fromFile(Environment.getDataDirectory()));
-//
-//        FinderService.launch(this, countOfLargest, folders);
     }
 }

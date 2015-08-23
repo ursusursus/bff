@@ -22,7 +22,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"
-                android:text="VID15165.mp4"
                 android:textColor="@android:color/black"
                 android:textSize="16sp"/>
 
@@ -30,7 +29,6 @@
                 android:id="@+id/subtitleTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="/sdcard/dasdsa/dsa/dsa"
                 android:textColor="@color/gray"
                 android:textSize="14sp"/>
         </LinearLayout>
@@ -40,7 +38,6 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="148MB"
             android:textColor="@color/orange"
             android:textSize="14sp"
             android:textStyle="bold"/>

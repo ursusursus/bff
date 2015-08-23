@@ -8,17 +8,17 @@ import java.io.File;
 /**
  * Created by ursusursus on 19.8.2015.
  */
-public class FooBarFile implements Parcelable {
+public class ParcelableFile implements Parcelable {
 
     private final String mName;
     private final String mPath;
     private final long mSize;
 
-    public static FooBarFile fromFile(File file) {
-        return new FooBarFile(file.getName(), file.getAbsolutePath(), file.length());
+    public static ParcelableFile fromFile(File file) {
+        return new ParcelableFile(file.getName(), file.getAbsolutePath(), file.length());
     }
 
-    protected FooBarFile(String name, String path, long size) {
+    protected ParcelableFile(String name, String path, long size) {
         mName = name;
         mPath = path;
         mSize = size;
@@ -37,13 +37,13 @@ public class FooBarFile implements Parcelable {
     }
 
     // Parcelable boilerplate bonanza
-    public static final Creator<FooBarFile> CREATOR = new Creator<FooBarFile>() {
-        public FooBarFile createFromParcel(Parcel source) {
-            return new FooBarFile(source);
+    public static final Creator<ParcelableFile> CREATOR = new Creator<ParcelableFile>() {
+        public ParcelableFile createFromParcel(Parcel source) {
+            return new ParcelableFile(source);
         }
 
-        public FooBarFile[] newArray(int size) {
-            return new FooBarFile[size];
+        public ParcelableFile[] newArray(int size) {
+            return new ParcelableFile[size];
         }
     };
 
@@ -54,7 +54,7 @@ public class FooBarFile implements Parcelable {
         dest.writeLong(mSize);
     }
 
-    protected FooBarFile(Parcel in) {
+    protected ParcelableFile(Parcel in) {
         mName = in.readString();
         mPath = in.readString();
         mSize = in.readLong();

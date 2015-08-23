@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import sk.ursus.bigfilesfinder.R;
-import sk.ursus.bigfilesfinder.model.FooBarFile;
+import sk.ursus.bigfilesfinder.model.ParcelableFile;
 import sk.ursus.bigfilesfinder.util.Utils;
 
 /**
@@ -19,17 +19,17 @@ import sk.ursus.bigfilesfinder.util.Utils;
 public class ResultsAdapter extends BaseAdapter {
 
     private final LayoutInflater mInflater;
-    private ArrayList<FooBarFile> mFooBars;
+    private ArrayList<ParcelableFile> mFooBars;
 
     public ResultsAdapter(Context context) {
         mInflater = LayoutInflater.from(context);
     }
 
-    public ArrayList<FooBarFile> getFooBars() {
+    public ArrayList<ParcelableFile> getFooBars() {
         return mFooBars;
     }
 
-    public void setFooBars(ArrayList<FooBarFile> fooBars) {
+    public void setFooBars(ArrayList<ParcelableFile> fooBars) {
         mFooBars = fooBars;
     }
 
@@ -59,7 +59,7 @@ public class ResultsAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        final FooBarFile filePath = (FooBarFile) getItem(position);
+        final ParcelableFile filePath = (ParcelableFile) getItem(position);
         holder.mTitleTextView.setText(filePath.getName());
         holder.mSubtitleTextView.setText(filePath.getPath());
         holder.mFileSizeTextView.setText(Utils.bytesToMegabytes(filePath.getSize()) + " MB");

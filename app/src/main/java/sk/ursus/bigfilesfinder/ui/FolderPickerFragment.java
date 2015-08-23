@@ -33,7 +33,7 @@ import sk.ursus.bigfilesfinder.util.Utils;
  */
 public class FolderPickerFragment extends BaseFragment implements MainActivity.BackListener {
 
-    public static final String TAG = "file_picker";
+    public static final String TAG = "file_picker_fragment";
     private static final String EXTRA_SELECTED_PATHS = "selected_paths";
     private static final String EXTRA_CURRENT_FOLDER = "current_folder";
 
@@ -134,7 +134,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     private void navigateIn(File file) {
         final File[] files = listFolders(file);
         if (files == null || files.length <= 0) {
-            Toast.makeText(getActivity(), "Folder " + file.getName() + " has no subfolders", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), String.format(getString(R.string.no_subfolders), file.getName()), Toast.LENGTH_SHORT).show();
             return;
         }
 
