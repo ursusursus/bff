@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         boolean onBackPressed();
     }
 
-    private ArrayList<BackListener> mBackListeners = new ArrayList<>();
+    private BackListener mBackListener;
     private ArrayList<FilePath> mSelectedFoldersList;
     private int mCount;
 
@@ -84,23 +84,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        boolean handled = false;
-        for (int i = 0; i < mBackListeners.size(); i++) {
-            if (mBackListeners.get(i).onBackPressed()) {
-                handled = true;
-                break;
+        if (mBackListener != null) {
+            if (mBackListener.onBackPressed()) {
+                return;
             }
         }
-        if (!handled) {
-            super.onBackPressed();
-        }
+        super.onBackPressed();
     }
-
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBackListeners.clear();
+        mBackListener = null;
     }
 
     @Override
@@ -127,11 +122,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void registerBackListener(BackListener listener) {
-        mBackListeners.add(listener);
+        mBackListener = listener;
     }
 
     public void unregisterBackListener(BackListener listener) {
-        mBackListeners.remove(listener);
+        mBackListener = null;
     }
 
     private void foobar() {

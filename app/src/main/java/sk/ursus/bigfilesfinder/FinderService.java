@@ -154,6 +154,7 @@ public class FinderService extends Service {
     }
 
     private void doFindLargestFiles(int countOfLargest, ArrayList<FilePath> folders) {
+        BroadcastUtils.sendSearchStarted(this);
         NotificationUtils.cancelFinishedNotif(mNotificationManager);
         NotificationUtils.showProgressNotif(this, mNotificationManager);
 

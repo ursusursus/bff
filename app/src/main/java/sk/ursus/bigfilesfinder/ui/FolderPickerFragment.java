@@ -32,7 +32,7 @@ import sk.ursus.bigfilesfinder.util.Utils;
 /**
  * Created by vbrecka on 20.8.2015.
  */
-public class FolderPickerFragment extends BaseFragment {
+public class FolderPickerFragment extends BaseFragment implements MainActivity.BackListener {
 
     public static final String TAG = "file_picker";
     private FilesAdapter mAdapter;
@@ -52,6 +52,18 @@ public class FolderPickerFragment extends BaseFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mSelectedFolders = new HashSet<>();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((MainActivity) getActivity()).registerBackListener(this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        ((MainActivity) getActivity()).unregisterBackListener(this);
     }
 
     @Nullable
@@ -122,7 +134,7 @@ public class FolderPickerFragment extends BaseFragment {
 
     @Override
     public boolean onBackPressed() {
-        Log.d("Default", "onBackPress");
+        Log.d("Default", "onBackPressed");
         if (mCurrentFolder != null) {
             final File parentFolder = mCurrentFolder.getParentFile();
             if (parentFolder != null) {
