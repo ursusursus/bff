@@ -6,14 +6,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.transition.AutoTransition;
 import android.transition.Transition;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -45,6 +45,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     private Toolbar mToolbar;
     private FloatingActionButton mFab;
     private TransitionWrapper mTransitionWrapper;
+    private ListView mListView;
 
     public static FolderPickerFragment newInstance() {
         FolderPickerFragment f = new FolderPickerFragment();
@@ -104,14 +105,16 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
             }
         });
 
-        mAdapter = new FilesAdapter(getActivity(), mCheckedListener);
-        final ListView listView = (ListView) view.findViewById(R.id.listView);
-        listView.setOnItemClickListener(mItemClickListener);
-        listView.setAdapter(mAdapter);
+        // Setup recyclerView
+        mAdapter = new FilesAdapter(getActivity(), mAdapterListener);
+        final RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.listView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        recyclerView.setAdapter(mAdapter);
 
         //
-        mTransitionWrapper = TransitionWrapper.newInstance(mFab);
+        mTransitionWrapper = TransitionWrapper.newInstance(recyclerView, mFab);
 
+        // Init list with folder
         if (savedInstanceState != null && savedInstanceState.getString(EXTRA_CURRENT_FOLDER) != null) {
             mCurrentFolder = new File(savedInstanceState.getString(EXTRA_CURRENT_FOLDER));
         } else {
@@ -147,7 +150,6 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
 
     @Override
     public boolean onBackPressed() {
-        Log.d("Default", "onBackPressed");
         if (mCurrentFolder != null) {
             final File parentFolder = mCurrentFolder.getParentFile();
             if (parentFolder != null) {
@@ -179,18 +181,16 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         }
     };
 
-    private AdapterView.OnItemClickListener mItemClickListener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            final File file = (File) mAdapter.getItem(position);
-            navigateIn(file);
-        }
-    };
+    private FilesAdapter.FiledAdapterListener mAdapterListener = new FilesAdapter.FiledAdapterListener() {
 
-    private FilesAdapter.OnCheckedListener mCheckedListener = new FilesAdapter.OnCheckedListener() {
         @Override
-        public void onChecked(int position, boolean checked) {
-            final File file = (File) mAdapter.getItem(position);
+        public void onItemClick(int position) {
+            navigateIn(mAdapter.getItem(position));
+        }
+
+        @Override
+        public void onItemChecked(int position, boolean checked) {
+            final File file = mAdapter.getItem(position);
 
             Utils.beginDelayedTransition((ViewGroup) getView(), mTransitionWrapper.getTransition());
             if (checked) {
@@ -236,11 +236,11 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     };
 
     public static abstract class TransitionWrapper {
-        public static TransitionWrapper newInstance(FloatingActionButton fab) {
+        public static TransitionWrapper newInstance(RecyclerView recyclerView, FloatingActionButton fab) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                return new RealTransition(fab);
+                return new RealTransition(recyclerView, fab);
             } else {
-                return new DummyTransitionWrapper(fab);
+                return new DummyTransitionWrapper();
             }
         }
 
@@ -252,8 +252,9 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         private final Transition mTransition;
 
         @TargetApi(Build.VERSION_CODES.KITKAT)
-        public RealTransition(FloatingActionButton fab) {
-            mTransition = new AutoTransition().excludeTarget(fab, true);
+        public RealTransition(RecyclerView recyclerView, FloatingActionButton fab) {
+            mTransition = new AutoTransition().excludeTarget(fab, true)
+            .excludeChildren(recyclerView, true);
         }
 
         @Override
@@ -264,7 +265,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
 
     public static class DummyTransitionWrapper extends TransitionWrapper {
 
-        public DummyTransitionWrapper(FloatingActionButton fab) {
+        public DummyTransitionWrapper() {
         }
 
         @Override

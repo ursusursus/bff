@@ -4,10 +4,10 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -19,20 +19,23 @@ import sk.ursus.bigfilesfinder.R;
 /**
  * Created by vbrecka on 20.8.2015.
  */
-public class FilesAdapter extends BaseAdapter {
+public class FilesAdapter extends RecyclerView.Adapter<FilesAdapter.FilesViewHolder> {
 
-    public interface OnCheckedListener {
-        void onChecked(int position, boolean checked);
+    public interface FiledAdapterListener {
+        void onItemClick(int file);
+        void onItemChecked(int position, boolean checked);
     }
 
     private final LayoutInflater mInflater;
-    private final OnCheckedListener mListener;
+    private final FiledAdapterListener mListener;
+
     private HashSet<String> mSelectedPaths;
-    private Drawable mSwooshDrawable;
-    private Drawable mPlusDrawable;
     private File[] mFiles;
 
-    public FilesAdapter(Context context, OnCheckedListener listener) {
+    private Drawable mSwooshDrawable;
+    private Drawable mPlusDrawable;
+
+    public FilesAdapter(Context context, FiledAdapterListener listener) {
         mInflater = LayoutInflater.from(context);
         mListener = listener;
 
@@ -45,19 +48,20 @@ public class FilesAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-        final ViewHolder holder;
-        if (convertView == null) {
-            convertView = mInflater.inflate(R.layout.item_file, parent, false);
-            holder = new ViewHolder(convertView);
-            convertView.setTag(holder);
-        } else {
-            holder = (ViewHolder) convertView.getTag();
-        }
+    public FilesViewHolder onCreateViewHolder(ViewGroup viewGroup, int position) {
+        final View view = mInflater.inflate(R.layout.item_file, viewGroup, false);
+        return new FilesViewHolder(view, mListener);
+    }
 
-        final File file = (File) getItem(position);
+    @Override
+    public void onBindViewHolder(FilesViewHolder holder, final int position) {
+        final File file = mFiles[position];
+
+        // Title
         holder.mTitleTextView.setText(file.getName());
-        if(mSelectedPaths.contains(file.getAbsolutePath())) {
+
+        // Icon
+        if (mSelectedPaths.contains(file.getAbsolutePath())) {
             holder.mAddImageView.setImageDrawable(mSwooshDrawable);
         } else {
             holder.mAddImageView.setImageDrawable(mPlusDrawable);
@@ -66,12 +70,19 @@ public class FilesAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 if (mListener != null) {
-                    mListener.onChecked(position, !mSelectedPaths.contains(file.getAbsolutePath()));
+                    mListener.onItemChecked(position, !mSelectedPaths.contains(file.getAbsolutePath()));
                 }
             }
         });
+    }
 
-        return convertView;
+    public File getItem(int position) {
+        return mFiles != null ? mFiles[position] : null;
+    }
+
+    @Override
+    public int getItemCount() {
+        return mFiles != null ? mFiles.length : 0;
     }
 
     public void setSelected(HashSet<String> selectedPaths) {
@@ -82,28 +93,22 @@ public class FilesAdapter extends BaseAdapter {
         mFiles = files;
     }
 
-    @Override
-    public int getCount() {
-        return mFiles != null ? mFiles.length : 0;
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return mFiles[position];
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    private static class ViewHolder {
+    public static class FilesViewHolder extends RecyclerView.ViewHolder {
 
         public final TextView mTitleTextView;
         private final ViewGroup mAddContainer;
         private final ImageView mAddImageView;
 
-        public ViewHolder(View view) {
+        public FilesViewHolder(View view, final FiledAdapterListener listener) {
+            super(view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        listener.onItemClick(getAdapterPosition());
+                    }
+                }
+            });
             mTitleTextView = (TextView) view.findViewById(R.id.titleTextView);
             mAddContainer = (ViewGroup) view.findViewById(R.id.addContainer);
             mAddImageView = (ImageView) view.findViewById(R.id.addImageView);
