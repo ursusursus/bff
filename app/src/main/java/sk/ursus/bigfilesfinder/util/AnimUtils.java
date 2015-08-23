@@ -3,8 +3,13 @@ package sk.ursus.bigfilesfinder.util;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.TimeInterpolator;
+import android.annotation.TargetApi;
+import android.content.res.Resources;
+import android.graphics.Rect;
+import android.os.Build;
 import android.support.design.widget.FloatingActionButton;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 
@@ -70,5 +75,34 @@ public class AnimUtils {
                         fab.setVisibility(View.INVISIBLE);
                     }
                 });
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public static void reveal(Resources res, FloatingActionButton fab, View revealView, final Runnable endAction) {
+        // Oh Android...
+        int statusBarHeight = 0;
+        int resourceId = res.getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            statusBarHeight = res.getDimensionPixelSize(resourceId);
+        }
+        final Rect rect = new Rect();
+        fab.getGlobalVisibleRect(rect);
+
+        //
+        final int cX = rect.centerX();
+        final int cY = rect.centerY() - statusBarHeight;
+        final int radius = (int) Math.sqrt(Math.pow(cX, 2) + Math.pow(cY, 2));
+
+        final Animator revealAnim = ViewAnimationUtils.createCircularReveal(revealView, cX, cY, 0F, radius);
+        revealAnim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (endAction != null) {
+                    endAction.run();
+                }
+            }
+        });
+        revealView.setVisibility(View.VISIBLE);
+        revealAnim.start();
     }
 }

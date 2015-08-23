@@ -2,6 +2,7 @@ package sk.ursus.bigfilesfinder.ui;
 
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -32,16 +33,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState == null) {
-            swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG);
+            swap(WelcomeFragment.newInstance(), WelcomeFragment.TAG, false);
         }
     }
 
     private void swap(BaseFragment f, String tag) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .addToBackStack(null)
-                .replace(R.id.container, f, tag)
-                .commit();
+        swap(f, tag, true);
+    }
+
+    private void swap(BaseFragment f, String tag, boolean animate) {
+        final FragmentTransaction tr = getSupportFragmentManager().beginTransaction();
+        tr.addToBackStack(null);
+        if (animate) {
+            tr.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE);
+        }
+        tr.replace(R.id.container, f, tag);
+        tr.commit();
     }
 
     public void onWelcomeFragmentFinished() {

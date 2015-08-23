@@ -13,6 +13,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -75,7 +76,7 @@ public class FinderService extends Service {
 
     private void findLargestFiles(Intent intent) {
         // Check for tasks still running
-        if(mTasksInFlight != null && !mTasksInFlight.isEmpty()) {
+        if (mTasksInFlight != null && !mTasksInFlight.isEmpty()) {
             BroadcastUtils.sendSearchError(this, ERROR_TASKS_RUNNING);
             return;
         }
@@ -88,8 +89,8 @@ public class FinderService extends Service {
             return;
         }
 
-        optimize(folders);
-        // doFindLargestFiles(countOfLargest, folders);
+        // optimize(folders);
+        doFindLargestFiles(countOfLargest, folders);
     }
 
     private void optimize(ArrayList<FilePath> folders) {
@@ -106,21 +107,45 @@ public class FinderService extends Service {
 //             }
 //        }
 
-        final ArrayList<FilePath> toRemove = new ArrayList<>();
-        for (int i = 0; i < folders.size(); i++) {
-            for (int j = 0; j < folders.size(); j++) {
-                if(folders.get(j).getPath().startsWith(folders.get(i).getPath())) {
-                    toRemove.add(folders.get(j));
-                    break;
+        ArrayList<String> list = new ArrayList<String>();
+        list.add("/sdcard/");
+        list.add("/0/");
+        list.add("/sdcard/data/");
+        list.add("/banana/");
+        list.add("/sdcard/data/foo/");
+        list.add("/sdcard/bar/");
+
+//        for (int i = list.size() - 1; i >= 0; i--) {
+//            for (int j = list.size() - 1; j >= 0; j--) {
+//                if(list.get(j).startsWith(list.get(i))) {
+//                    list.remove(j);
+//                }
+//            }
+//        }
+//        final Iterator<String> iteratorOuter = list.iterator();
+//        while(iteratorOuter.hasNext()) {
+//            String sOuter = iteratorOuter.next();
+//
+//            final Iterator<String> iteratorInner = list.iterator();
+//            while(iteratorInner.hasNext()) {
+//                String sInner = iteratorInner.next();
+//                if(sInner.startsWith(sOuter) && !sOuter.equals(sInner)) {
+//                    iteratorInner.remove();
+//                    // Log.d("Default", "DISSING" + sInner);
+//                }
+//            }
+//        }
+
+        for (Iterator<String> ito = list.iterator(); ito.hasNext();){
+            for (Iterator<String> iti = list.iterator(); iti.hasNext();){
+                if(iti.next().startsWith("/sdcard")) {
+                    iti.remove();
                 }
             }
         }
 
-        HashSet<FilePath> set = new HashSet<FilePath>();
-        set.contains()
-
-        for (FilePath folder : toRemove) {
-            Log.d("Default", "FOLDER=" + folder.getPath());
+        for (String s : list) {
+            Log.d("Default", "s=" + s);
         }
 
         // two nested loops

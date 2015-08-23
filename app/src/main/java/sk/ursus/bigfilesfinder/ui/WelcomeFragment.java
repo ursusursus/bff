@@ -4,8 +4,8 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.view.LayoutInflater;
@@ -16,12 +16,8 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-
-import sk.ursus.bigfilesfinder.FinderService;
-import sk.ursus.bigfilesfinder.model.FilePath;
-import sk.ursus.bigfilesfinder.util.AnimUtils;
 import sk.ursus.bigfilesfinder.R;
+import sk.ursus.bigfilesfinder.util.AnimUtils;
 
 /**
  * Created by vbrecka on 21.8.2015.
@@ -49,24 +45,34 @@ public class WelcomeFragment extends BaseFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        final View revealView = view.findViewById(R.id.revealView);
         final TextView textView1 = (TextView) view.findViewById(R.id.textView1);
         final TextView textView2 = (TextView) view.findViewById(R.id.textView2);
         final FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // ((MainActivity) getActivity()).onWelcomeFragmentFinished();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    AnimUtils.reveal(getResources(), fab, revealView, new Runnable() {
+                        @Override
+                        public void run() {
+                            ((MainActivity) getActivity()).onWelcomeFragmentFinished();
+                        }
+                    });
+                } else {
+                    ((MainActivity) getActivity()).onWelcomeFragmentFinished();
+                }
 
-                int countOfLargest = 10;
-                // potom este check na null fily bude treba
-                ArrayList<FilePath> folders = new ArrayList<>();
-                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
-                folders.add(FilePath.fromFile(Environment.getDataDirectory()));
-                folders.add(FilePath.fromFile(Environment.getDataDirectory()));
-
-                FinderService.launch(getActivity(), countOfLargest, folders);
+//                int countOfLargest = 10;
+//                // potom este check na null fily bude treba
+//                ArrayList<FilePath> folders = new ArrayList<>();
+//                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
+//                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
+//                folders.add(FilePath.fromFile(Environment.getExternalStorageDirectory()));
+//                folders.add(FilePath.fromFile(Environment.getDataDirectory()));
+//                folders.add(FilePath.fromFile(Environment.getDataDirectory()));
+//
+//                FinderService.launch(getActivity(), countOfLargest, folders);
             }
         });
 
