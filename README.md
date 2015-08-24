@@ -21,9 +21,9 @@ Ako list je použitý RecyclerView, ktorý sa lepšie chová s Transition animá
 Kde každý z nich predstavuje logický krok zadávania vstupov pre výpočet.</p>
 
 <h3>FinderService</h3>
-<p>Predstavuje „serverovú“ časť, ktorá vykonáva samotné prehľadávanie. Service bol zvolený preto lebo aktivita je „len GUI“, ktoré po odchode do pozadia,môže kedykoľvek zaniknúť a preto nie je vhodným rodičom pre potenciálne dlhotrvajúce thready výpočtu. Tzn, výpočeť je nezávislý od GUI, a to je dobre. Komunikácia medzi nimi prebieha pomocou intentov (broadcastov)</p>
+<p>&nbsp;&nbsp;&nbsp;Predstavuje „serverovú“ časť, ktorá vykonáva samotné prehľadávanie. Service bol zvolený preto lebo aktivita je „len GUI“, ktoré po odchode do pozadia,môže kedykoľvek zaniknúť a preto nie je vhodným rodičom pre potenciálne dlhotrvajúce thready výpočtu. Tzn, výpočeť je nezávislý od GUI, a to je dobre. Komunikácia medzi nimi prebieha pomocou intentov (broadcastov)</p>
 
-<p>Vstupom pre service je počet koľko najvačších súborov hľadáme a cesty na adresáre, ktoré majú byť prehľadávané.</p>
+<p>&nbsp;&nbsp;&nbsp;Vstupom pre service je počet koľko najvačších súborov hľadáme a cesty na adresáre, ktoré majú byť prehľadávané.</p>
 
 <p>&nbsp;&nbsp;&nbsp;Po očístení o neplatné vstupy, service optimalizuje zadané cesty adresárov vyhodením duplikátov a ciest ktoré su podadresárom niektorých z ostatných ciest a nemá zmysel ich prehľadávať (v princípe, algoritmus kontroluje prefixy ciest)</p>
 <p>&nbsp;&nbsp;&nbsp;Potom pre každý prekonvertovaný File, vytvára FindLargestFilesTask asynchrónny task, ktorý beží na vlastnom Thread-e. Tasky sú spúšťané na exekútore, tzn. všetky thready bežia paralelne per-file. V tele tasku sa prehľadáva cesta rekurízvne a ak súbor nie je adresár je pridaný do kolekcie.</p>
