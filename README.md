@@ -1,31 +1,35 @@
 <h1>Big files finder</h1>
-<b>Zadaním úlohy bolo nájs N najväèších súborov vo zvolenıch adresároch.</b>
+<b>ZadanÃ­m Ãºlohy bolo nÃ¡jsÅ¥ N najvÃ¤ÄÅ¡Ã­ch sÃºborov vo zvolenÃ½ch adresÃ¡roch.</b>
 
-Aplikácia sa skladá z 2 architekturálnych èastí</br></br>
+AplikÃ¡cia sa skladÃ¡ z 2 architekturÃ¡lnych ÄastÃ­</br></br>
 
-<h2>MainActivity</h2>
-	Predstavuje „klientskú“ èas, obsahuje GUI ktoré ovláda vstupy pre servisu.
-	Skladá sa z 4 fragmentov
-	<li><b>WelcomeFragment<b>
-		Predstavuje len úvodnú obrazovku, ukáka komplexnejších animaènıch techník a material designu</li>
+<h3>MainActivity</h3>
+&nbsp;&nbsp;&nbsp;Predstavuje â€klientskÃºâ€œ ÄasÅ¥, obsahuje GUI ktorÃ© ovlÃ¡da vstupy pre servisu. SkladÃ¡ sa zo 4 fragmentov
 
-	b.	FolderPickerFragment
-		UI pre vıber adresárov, je moné prechádza aktuálnu súborovú štruktúru a prídáva si adresáre, ktoré budú preh¾adávané. Zvolené adresáre su zobrazené v FileChipsView, èo je subclassa FlowLayout-u, ktorá je obdobou LinearLayoutu taká, e ak sa View zmestí do riadku tak ho dá do toho istého riadku, ak nie tak na novı riadok. 
-		Ako list je pouitı RecyclerView, ktorı sa lepšie chová s Transition animáciami ako ListView. V pravej èasti riadku je taktie znázornenı stav súboru (zašktrnutie / plus)
+<p><b>WelcomeFragment</b></br>
+&nbsp;&nbsp;&nbsp;Predstavuje len ÃºvodnÃº obrazovku, ukÃ¡Å¾ka komplexnejÅ¡Ã­ch animaÄnÃ½ch technÃ­k a material designu</p>
 
-	c.	CountPickerFragment
-		Zvolenie poètu najväèších h¾adanıch súborov
+<p><b>FolderPickerFragment</b></br>
+&nbsp;&nbsp;&nbsp;UI pre vÃ½ber adresÃ¡rov, je moÅ¾nÃ© prechÃ¡dzaÅ¥ aktuÃ¡lnu sÃºborovÃº Å¡truktÃºru a prÃ­dÃ¡vaÅ¥ si adresÃ¡re, ktorÃ© budÃº prehÄ¾adÃ¡vanÃ©. ZvolenÃ© adresÃ¡re su zobrazenÃ© v FileChipsView, Äo je subclassa FlowLayout-u, ktorÃ¡ je obdobou LinearLayoutu takÃ¡, Å¾e ak sa View zmestÃ­ do riadku tak ho dÃ¡ do toho istÃ©ho riadku, ak nie tak na novÃ½ riadok. 
+Ako list je pouÅ¾itÃ½ RecyclerView, ktorÃ½ sa lepÅ¡ie chovÃ¡ s Transition animÃ¡ciami ako ListView. V pravej Äasti riadku je taktieÅ¾ znÃ¡zornenÃ½ stav sÃºboru (zaÅ¡ktrnutie / plus)</p>
 
-	d.	ResultsFragment
-		Reaguje na broadcasty FinderServicu, a zobrazuje progressbar/vısledky/chybu vıpoètu.
-		Kde kadı z nich predstavuje logickı krok zadávania vstupov pre vıpoèet.
+<p><b>CountPickerFragment</b></br>
+&nbsp;&nbsp;&nbsp;Zvolenie poÄtu najvÃ¤ÄÅ¡Ã­ch hÄ¾adanÃ½ch sÃºborov</p>
 
-<h2>FinderService</h2>
-	<p>Predstavuje „serverovú“ èas, ktorá vykonáva samotné preh¾adávanie. Service bol zvolenı preto lebo aktivita je „len GUI“, ktoré po odchode do pozadia,môe kedyko¾vek zaniknú a preto nie je vhodnım rodièom pre potenciálne dlhotrvajúce thready vıpoètu. Tzn, vıpoèe je nezávislı od GUI, a to je dobre. Komunikácia medzi nimi prebieha pomocou intentov (broadcastov)</p>
-	<p>Vstupom pre service je poèet ko¾ko najvaèších súborov h¾adáme a cesty na adresáre, ktoré majú by preh¾adávané.</p>
-	<p>Po oèístení o neplatné vstupy, service optimalizuje zadané cesty adresárov vyhodením duplikátov a ciest ktoré su podadresárom niektorıch z ostatnıch ciest a nemá zmysel ich preh¾adáva (v princípe, algoritmus kontroluje prefixy ciest)</p>
-	<p>Potom pre kadı prekonvertovanı File, vytvára FindLargestFilesTask asynchrónny task, ktorı beí na vlastnom Thread-e. Tasky sú spúšané na exekútore, tzn. všetky thready beia paralelne per-file. V tele tasku sa preh¾adáva cesta rekurízvne a ak súbor nie je adresár je pridanı do kolekcie.</p>
-	<p>Zvolená kolekcia FilesBoundedPriorityQueue, ktorá predstavuje subclass-u PriorityQueue, èo je štandardná implementácia heap-u, ktorá nám zaruèí polo-zoradenie súborov s garantovanım najmenším súborom na vrchole. Pri pridávaní je avšak zvolená optimalizácia, kede vieme ko¾ko max. súborov h¾adáme, teda nemá zmysel, aby v heap-e boli všetky súbory ale len najvaèších N v danom momente. Teda pri pridávaní sa kontroluje, èí je vstup väèší ako súbor na vrchole (najmenší z heap-u), takı súbor je do heap-u pridanı a vrchol odstránenı. Takto èasom dostaneme N najvaèších súborov. (ešte podotknú, e heap-a je zoradená vzostupne, tzn najmenší je navrchole, teda je po vybratí prvkov z nej do listu, je potrebné list otoèi). Taktie metóda add() je synchronizovaná a garantuje thread-safety, keïe heap je zdie¾anı medzi thread-mi.</p>
-	<p>Po dokonèení úlohy, je referencia naò odobratá zo Set-u beiacich úloh. Ak je set prázdny, boli vykonané všetky úlohy, teda vısledky vraciame cez broadcast naspa do UI a service ukonèujeme. (Samozrejme o zaèatí a skonèení vıpoètov notifikuje systémová notifikácia s progress-barom, resp. jednorázová o ukonèení všetkıch vıpoètov.). Pre prenos vısledkov bol pouítı ParcelableFile, èo je len POJO cesty, názvu a ve¾kosti súboru, keïe systémovı File neimplementuje Parcelable interface a nie je moné preposla ArrayList File-ov cez intent.</p>
+<p><b>ResultsFragment</b></br>
+&nbsp;&nbsp;&nbsp;Reaguje na broadcasty FinderServicu, a zobrazuje progressbar/vÃ½sledky/chybu vÃ½poÄtu.
+Kde kaÅ¾dÃ½ z nich predstavuje logickÃ½ krok zadÃ¡vania vstupov pre vÃ½poÄet.</p>
+
+<h3>FinderService</h3>
+<p>&nbsp;&nbsp;&nbsp;Predstavuje â€serverovÃºâ€œ ÄasÅ¥, ktorÃ¡ vykonÃ¡va samotnÃ© prehÄ¾adÃ¡vanie. Service bol zvolenÃ½ preto lebo aktivita je â€len GUIâ€œ, ktorÃ© po odchode do pozadia,mÃ´Å¾e kedykoÄ¾vek zaniknÃºÅ¥ a preto nie je vhodnÃ½m rodiÄom pre potenciÃ¡lne dlhotrvajÃºce thready vÃ½poÄtu. Tzn, vÃ½poÄeÅ¥ je nezÃ¡vislÃ½ od GUI, a to je dobre. KomunikÃ¡cia medzi nimi prebieha pomocou intentov (broadcastov)</p>
+
+<p>&nbsp;&nbsp;&nbsp;Vstupom pre service je poÄet koÄ¾ko najvaÄÅ¡Ã­ch sÃºborov hÄ¾adÃ¡me a cesty na adresÃ¡re, ktorÃ© majÃº byÅ¥ prehÄ¾adÃ¡vanÃ©.</p>
+
+<p>&nbsp;&nbsp;&nbsp;Po oÄÃ­stenÃ­ o neplatnÃ© vstupy, service optimalizuje zadanÃ© cesty adresÃ¡rov vyhodenÃ­m duplikÃ¡tov a ciest ktorÃ© su podadresÃ¡rom niektorÃ½ch z ostatnÃ½ch ciest a nemÃ¡ zmysel ich prehÄ¾adÃ¡vaÅ¥ (v princÃ­pe, algoritmus kontroluje prefixy ciest)</p>
+<p>&nbsp;&nbsp;&nbsp;Potom pre kaÅ¾dÃ½ prekonvertovanÃ½ File, vytvÃ¡ra FindLargestFilesTask asynchrÃ³nny task, ktorÃ½ beÅ¾Ã­ na vlastnom Thread-e. Tasky sÃº spÃºÅ¡Å¥anÃ© na exekÃºtore, tzn. vÅ¡etky thready beÅ¾ia paralelne per-file. V tele tasku sa prehÄ¾adÃ¡va cesta rekurÃ­zvne a ak sÃºbor nie je adresÃ¡r je pridanÃ½ do kolekcie.</p>
+
+<p>&nbsp;&nbsp;&nbsp;ZvolenÃ¡ kolekcia FilesBoundedPriorityQueue, ktorÃ¡ predstavuje subclass-u PriorityQueue, Äo je Å¡tandardnÃ¡ implementÃ¡cia heap-u, ktorÃ¡ nÃ¡m zaruÄÃ­ polo-zoradenie sÃºborov s garantovanÃ½m najmenÅ¡Ã­m sÃºborom na vrchole. Pri pridÃ¡vanÃ­ je avÅ¡ak zvolenÃ¡ optimalizÃ¡cia, kedÅ¾e vieme koÄ¾ko max. sÃºborov hÄ¾adÃ¡me, teda nemÃ¡ zmysel, aby v heap-e boli vÅ¡etky sÃºbory ale len najvaÄÅ¡Ã­ch N v danom momente. Teda pri pridÃ¡vanÃ­ sa kontroluje, ÄÃ­ je vstup vÃ¤ÄÅ¡Ã­ ako sÃºbor na vrchole (najmenÅ¡Ã­ z heap-u), takÃ½ sÃºbor je do heap-u pridanÃ½ a vrchol odstrÃ¡nenÃ½. Takto Äasom dostaneme N najvaÄÅ¡Ã­ch sÃºborov. (eÅ¡te podotknÃºÅ¥, Å¾e heap-a je zoradenÃ¡ vzostupne, tzn najmenÅ¡Ã­ je navrchole, teda je po vybratÃ­ prvkov z nej do listu, je potrebnÃ© list otoÄiÅ¥). TaktieÅ¾ metÃ³da add() je synchronizovanÃ¡ a garantuje thread-safety, keÄÅ¾e heap je zdieÄ¾anÃ½ medzi thread-mi.</p>
+
+<p>&nbsp;&nbsp;&nbsp;Po dokonÄenÃ­ Ãºlohy, je referencia naÅˆ odobratÃ¡ zo Set-u beÅ¾iacich Ãºloh. Ak je set prÃ¡zdny, boli vykonanÃ© vÅ¡etky Ãºlohy, teda vÃ½sledky vraciame cez broadcast naspaÅ¥ do UI a service ukonÄujeme. (Samozrejme o zaÄatÃ­ a skonÄenÃ­ vÃ½poÄtov notifikuje systÃ©movÃ¡ notifikÃ¡cia s progress-barom, resp. jednorÃ¡zovÃ¡ o ukonÄenÃ­ vÅ¡etkÃ½ch vÃ½poÄtov.). Pre prenos vÃ½sledkov bol pouÅ¾Ã­tÃ½ ParcelableFile, Äo je len POJO cesty, nÃ¡zvu a veÄ¾kosti sÃºboru, keÄÅ¾e systÃ©movÃ½ File neimplementuje Parcelable interface a nie je moÅ¾nÃ© preposlaÅ¥ ArrayList File-ov cez intent.</p>
 
 
