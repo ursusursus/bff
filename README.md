@@ -1,12 +1,13 @@
 <h1>Big files finder</h1>
 <b>Zadaním úlohy bolo nájs N najväèších súborov vo zvolenıch adresároch.</b>
 
-Aplikácia sa skladá z 2 architekturálnych èastí</br>
-<b>1.	MainActivity</b>
+Aplikácia sa skladá z 2 architekturálnych èastí</br></br>
+
+<h2>MainActivity</h2>
 	Predstavuje „klientskú“ èas, obsahuje GUI ktoré ovláda vstupy pre servisu.
 	Skladá sa z 4 fragmentov
-	a.	WelcomeFragment
-		Predstavuje len úvodnú obrazovku, ukáka komplexnejších animaènıch techník a material designu
+	<li><b>WelcomeFragment<b>
+		Predstavuje len úvodnú obrazovku, ukáka komplexnejších animaènıch techník a material designu</li>
 
 	b.	FolderPickerFragment
 		UI pre vıber adresárov, je moné prechádza aktuálnu súborovú štruktúru a prídáva si adresáre, ktoré budú preh¾adávané. Zvolené adresáre su zobrazené v FileChipsView, èo je subclassa FlowLayout-u, ktorá je obdobou LinearLayoutu taká, e ak sa View zmestí do riadku tak ho dá do toho istého riadku, ak nie tak na novı riadok. 
@@ -19,7 +20,7 @@ Aplikácia sa skladá z 2 architekturálnych èastí</br>
 		Reaguje na broadcasty FinderServicu, a zobrazuje progressbar/vısledky/chybu vıpoètu.
 		Kde kadı z nich predstavuje logickı krok zadávania vstupov pre vıpoèet.
 
-<b>2.	FinderService</b></br>
+<h2>FinderService</h2>
 	<p>Predstavuje „serverovú“ èas, ktorá vykonáva samotné preh¾adávanie. Service bol zvolenı preto lebo aktivita je „len GUI“, ktoré po odchode do pozadia,môe kedyko¾vek zaniknú a preto nie je vhodnım rodièom pre potenciálne dlhotrvajúce thready vıpoètu. Tzn, vıpoèe je nezávislı od GUI, a to je dobre. Komunikácia medzi nimi prebieha pomocou intentov (broadcastov)</p>
 	<p>Vstupom pre service je poèet ko¾ko najvaèších súborov h¾adáme a cesty na adresáre, ktoré majú by preh¾adávané.</p>
 	<p>Po oèístení o neplatné vstupy, service optimalizuje zadané cesty adresárov vyhodením duplikátov a ciest ktoré su podadresárom niektorıch z ostatnıch ciest a nemá zmysel ich preh¾adáva (v princípe, algoritmus kontroluje prefixy ciest)</p>
