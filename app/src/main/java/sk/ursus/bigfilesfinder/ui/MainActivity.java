@@ -13,6 +13,7 @@ import sk.ursus.bigfilesfinder.R;
 
 public class MainActivity extends AppCompatActivity implements
         WelcomeFragment.OnWelcomeFragmentListener,
+        FolderPickerFragment.OnFolderPickerFragmentListener,
         CountPickerFragment.OnCountPickerFragmentListener,
         ResultsFragment.OnResultsFragmentListener {
 
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements
         swap(FolderPickerFragment.newInstance(), FolderPickerFragment.TAG);
     }
 
+    @Override
     public void onFolderPickerFragmentFinished(HashSet<String> selectedPathsSet) {
         final ArrayList<String> selectedPaths = new ArrayList<>();
         final Iterator<String> iter = selectedPathsSet.iterator();

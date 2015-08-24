@@ -32,7 +32,7 @@ import sk.ursus.bigfilesfinder.util.Utils;
 /**
  * Created by vbrecka on 20.8.2015.
  */
-public class FolderPickerFragment extends BaseFragment implements MainActivity.BackListener {
+public class FolderPickerFragment extends BaseFragment {
 
     public static final String TAG = "file_picker_fragment";
     private static final String EXTRA_SELECTED_PATHS = "selected_paths";
@@ -135,13 +135,13 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     @Override
     public void onResume() {
         super.onResume();
-        ((MainActivity) getActivity()).registerBackListener(this);
+        ((MainActivity) getActivity()).registerBackListener(mBackListener);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        ((MainActivity) getActivity()).unregisterBackListener(this);
+        ((MainActivity) getActivity()).unregisterBackListener(mBackListener);
     }
 
     @Override
@@ -177,18 +177,6 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         mToolbar.setSubtitle(file.getAbsolutePath());
     }
 
-    @Override
-    public boolean onBackPressed() {
-        if (mCurrentFolder != null) {
-            final File parentFolder = mCurrentFolder.getParentFile();
-            if (parentFolder != null) {
-                navigateIn(parentFolder);
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void updateChipsAndFab() {
         if (!mSelectedPaths.isEmpty()) {
             if (mFab.getVisibility() != View.VISIBLE) {
@@ -200,6 +188,30 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
                 AnimUtils.bounceOut(mFab);
             }
             mChipsView.setVisibility(View.GONE);
+        }
+    }
+
+    private void update() {
+        updateChipsAndFab();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void removeFolder(String folderPath) {
+        mSelectedPaths.remove(folderPath);
+        mChipsView.remove(folderPath);
+    }
+
+    private void addFolder(String folderPath) {
+        mSelectedPaths.add(folderPath);
+        mChipsView.add(folderPath);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(EXTRA_SELECTED_PATHS, mSelectedPaths);
+        if (mCurrentFolder != null) {
+            outState.putString(EXTRA_CURRENT_FOLDER, mCurrentFolder.getAbsolutePath());
         }
     }
 
@@ -231,29 +243,19 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         }
     };
 
-    private void update() {
-        updateChipsAndFab();
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void removeFolder(String folderPath) {
-        mSelectedPaths.remove(folderPath);
-        mChipsView.remove(folderPath);
-    }
-
-    private void addFolder(String folderPath) {
-        mSelectedPaths.add(folderPath);
-        mChipsView.add(folderPath);
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putSerializable(EXTRA_SELECTED_PATHS, mSelectedPaths);
-        if (mCurrentFolder != null) {
-            outState.putString(EXTRA_CURRENT_FOLDER, mCurrentFolder.getAbsolutePath());
+    private MainActivity.BackListener mBackListener = new MainActivity.BackListener() {
+        @Override
+        public boolean onBackPressed() {
+            if (mCurrentFolder != null) {
+                final File parentFolder = mCurrentFolder.getParentFile();
+                if (parentFolder != null) {
+                    navigateIn(parentFolder);
+                    return true;
+                }
+            }
+            return false;
         }
-    }
+    };
 
     private static final Comparator<File> ALPHABETICAL_ORDER = new Comparator<File>() {
 
