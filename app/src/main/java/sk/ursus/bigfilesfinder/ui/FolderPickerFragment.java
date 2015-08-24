@@ -104,12 +104,16 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         // Init list with folder
         if (savedInstanceState != null && savedInstanceState.getString(EXTRA_CURRENT_FOLDER) != null) {
             mCurrentFolder = new File(savedInstanceState.getString(EXTRA_CURRENT_FOLDER));
+            updateChipsAndFab();
+
         } else {
             // "Root"
-            mCurrentFolder = Environment.getExternalStorageDirectory();
+            if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+                mCurrentFolder = Environment.getExternalStorageDirectory();
+            }
         }
+
         navigateIn(mCurrentFolder);
-        updateChipsAndFab();
     }
 
     @Override
@@ -133,7 +137,12 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
 
     private void navigateIn(File file) {
         final File[] files = listFolders(file);
-        if (files == null || files.length <= 0) {
+        if (files == null) {
+            Toast.makeText(getActivity(), String.format(getString(R.string.unable_to_list), file.getName()), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (files.length <= 0) {
             Toast.makeText(getActivity(), String.format(getString(R.string.no_subfolders), file.getName()), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -251,7 +260,7 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         @TargetApi(Build.VERSION_CODES.KITKAT)
         public RealTransition(RecyclerView recyclerView, FloatingActionButton fab) {
             mTransition = new AutoTransition().excludeTarget(fab, true)
-            .excludeChildren(recyclerView, true);
+                    .excludeChildren(recyclerView, true);
         }
 
         @Override

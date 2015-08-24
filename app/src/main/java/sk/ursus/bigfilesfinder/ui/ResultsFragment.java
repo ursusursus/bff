@@ -162,8 +162,14 @@ public class ResultsFragment extends BaseFragment {
             mAdapter.setFooBars(filePaths);
             mAdapter.notifyDataSetChanged();
 
-            AnimUtils.crossfade(mListView, mProgressBar);
-            AnimUtils.bounceIn(mFab);
+            if (filePaths.isEmpty()) {
+                mProgressBar.setVisibility(View.GONE);
+                mErrorTextView.setVisibility(View.VISIBLE);
+                displayError(FinderService.ERROR_EMPTY_RESULTS);
+            } else {
+                AnimUtils.crossfade(mListView, mProgressBar);
+                AnimUtils.bounceIn(mFab);
+            }
         }
 
     };
@@ -178,6 +184,9 @@ public class ResultsFragment extends BaseFragment {
                 break;
             case FinderService.ERROR_NO_VALID_FOLDERS:
                 mErrorTextView.setText(R.string.error_no_valid_folders);
+                break;
+            case FinderService.ERROR_EMPTY_RESULTS:
+                mErrorTextView.setText(R.string.error_empty_results);
                 break;
             default:
                 mErrorTextView.setText(R.string.error_default);

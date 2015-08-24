@@ -9,8 +9,10 @@
     <string name="error_tasks_still_running">Sorry, there is a task still running</string>
     <string name="error_no_valid_folders">Sorry, no valid folders</string>
     <string name="error_default">Sorry, unable to find files</string>
+    <string name="error_empty_results">No files found</string>
     <string name="count_text1">I want to find</string>
     <string name="count_text2">how many</string>
     <string name="count_text3">biggest files</string>
     <string name="no_subfolders">Folder \'%s\' has no subfolders</string>
+    <string name="unable_to_list">Unable to list directory</string>
 </resources>

@@ -43,6 +43,7 @@ public class NotificationUtils {
                 .setContentTitle(context.getString(R.string.finished_notif_title))
                 .setContentText(context.getString(R.string.app_name))
                 .setAutoCancel(true)
+                .setDefaults(Notification.DEFAULT_ALL)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .build();
         nm.notify(FINISHED_NOTIF_ID, notification);

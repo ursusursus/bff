@@ -7,14 +7,12 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import sk.ursus.bigfilesfinder.util.BroadcastUtils;
@@ -35,11 +33,11 @@ public class FinderService extends Service {
     public static final int ERROR_INVALID_INPUT = 123;
     public static final int ERROR_NO_VALID_FOLDERS = 124;
     public static final int ERROR_TASKS_RUNNING = 125;
+    public static final int ERROR_EMPTY_RESULTS = 126;
 
     private NotificationManager mNotificationManager;
     private Set<FindLargestFilesTask> mTasksInFlight;
     private FilesBoundedPriorityQueue mFilesPriorityQueue;
-    private long mStart;
 
 
     public static void launch(Context context, int countOfLargest, ArrayList<String> folders) {
@@ -53,7 +51,6 @@ public class FinderService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("Default", "onStartCommand");
         if (ACTION_FIND_LARGEST_FILES.equals(intent.getAction())) {
             findLargestFiles(intent);
         }
@@ -63,14 +60,7 @@ public class FinderService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "FinderService # onCreate");
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "FinderService # onDestroy");
     }
 
     private void findLargestFiles(Intent intent) {
@@ -89,7 +79,7 @@ public class FinderService extends Service {
         }
 
         final ArrayList<File> folders = removeDuplicatesAndSelfSubdirectories2(folderPaths);
-        doFindLargestFiles(5, folders);
+        doFindLargestFiles(countOfLargest, folders);
     }
 
     /**
@@ -148,9 +138,6 @@ public class FinderService extends Service {
         mTasksInFlight = Collections.synchronizedSet(new HashSet<FindLargestFilesTask>());
         mFilesPriorityQueue = new FilesBoundedPriorityQueue(countOfLargest);
 
-        Log.d("Default", "START");
-        mStart = System.currentTimeMillis();
-
         // Launch search async task per folder
         for (int i = 0; i < folders.size(); i++) {
             final FindLargestFilesTask task = new FindLargestFilesTask();
@@ -180,9 +167,6 @@ public class FinderService extends Service {
     private void handleAllTasksFinished() {
         final ArrayList<File> largestFiles = mFilesPriorityQueue.toList();
 
-        long time = System.currentTimeMillis() - mStart;
-        Log.d("Default", "END      TOOK=" + time + "ms");
-
         BroadcastUtils.sendSearchFinished(this, largestFiles);
         NotificationUtils.cancelProgressNotif(mNotificationManager);
         NotificationUtils.showFinishedNotif(FinderService.this, mNotificationManager);
@@ -190,12 +174,11 @@ public class FinderService extends Service {
         stopSelf();
     }
 
-    private class FindLargestFilesTask extends AsyncTask<File, Void, List<File>> {
+    private class FindLargestFilesTask extends AsyncTask<File, Void, Void> {
 
         @Override
-        protected List<File> doInBackground(File... params) {
-            Log.d("Default", "LAUNCH");
-            if (params.length >= 0) {
+        protected Void doInBackground(File... params) {
+            if (params.length > 0) {
                 final File folder = params[0];
                 if (folder != null && folder.exists() && folder.isDirectory()) {
                     // Dive in and go through all the files in given
@@ -207,8 +190,8 @@ public class FinderService extends Service {
         }
 
         @Override
-        protected void onPostExecute(List<File> files) {
-            super.onPostExecute(files);
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
             handleTaskFinished(this);
         }
 
