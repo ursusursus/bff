@@ -1,5 +1,6 @@
 package sk.ursus.bigfilesfinder.ui;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -37,6 +38,11 @@ public class ResultsFragment extends BaseFragment {
     private static final String EXTRA_WAS_ERROR = "was_error";
     private static final String EXTRA_ERROR_CODE = "error_code";
 
+    public interface OnResultsFragmentListener {
+        void onResultsFragmentFinished();
+    }
+    private OnResultsFragmentListener mListener;
+
     private ResultsAdapter mAdapter;
     private ListView mListView;
     private ProgressBar mProgressBar;
@@ -46,6 +52,14 @@ public class ResultsFragment extends BaseFragment {
 
     public static ResultsFragment newInstance() {
         return new ResultsFragment();
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof OnResultsFragmentListener) {
+            mListener = (OnResultsFragmentListener) activity;
+        }
     }
 
     @Override
@@ -75,7 +89,9 @@ public class ResultsFragment extends BaseFragment {
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity) getActivity()).onResultsFragmentFinished();
+                if(mListener != null) {
+                    mListener.onResultsFragmentFinished();
+                }
             }
         });
 
@@ -113,6 +129,12 @@ public class ResultsFragment extends BaseFragment {
     public void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mReceiver);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     @Override

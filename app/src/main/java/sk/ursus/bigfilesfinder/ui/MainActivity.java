@@ -11,7 +11,10 @@ import java.util.Iterator;
 import sk.ursus.bigfilesfinder.FinderService;
 import sk.ursus.bigfilesfinder.R;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements
+        WelcomeFragment.OnWelcomeFragmentListener,
+        CountPickerFragment.OnCountPickerFragmentListener,
+        ResultsFragment.OnResultsFragmentListener {
 
 
     private static final String EXTRA_SELECTED_PATHS = "selected_paths";
@@ -52,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         tr.commit();
     }
 
+    @Override
     public void onWelcomeFragmentFinished() {
         swap(FolderPickerFragment.newInstance(), FolderPickerFragment.TAG);
     }
@@ -67,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         swap(CountPickerFragment.newInstance(), CountPickerFragment.TAG);
     }
 
+    @Override
     public void onCountPickerFragmentFinished(int count) {
         mCount = count;
         swap(ResultsFragment.newInstance(), ResultsFragment.TAG);
@@ -74,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
         FinderService.launch(MainActivity.this, mCount, mSelectedPaths);
     }
 
+    @Override
     public void onResultsFragmentFinished() {
         mCount = 0;
         mSelectedPaths.clear();

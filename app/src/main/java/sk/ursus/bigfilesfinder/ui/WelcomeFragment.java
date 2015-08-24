@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -30,9 +31,22 @@ public class WelcomeFragment extends BaseFragment {
     private static final int DURATION_TRANSLATE = 1250;
     private static final int START_OFFSET = 125;
 
+    public interface OnWelcomeFragmentListener {
+        void onWelcomeFragmentFinished();
+    }
+    private OnWelcomeFragmentListener mListener;
+
     public static WelcomeFragment newInstance() {
         final WelcomeFragment f = new WelcomeFragment();
         return f;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof OnWelcomeFragmentListener) {
+            mListener = (OnWelcomeFragmentListener) activity;
+        }
     }
 
     @Nullable
@@ -56,11 +70,15 @@ public class WelcomeFragment extends BaseFragment {
                     AnimUtils.reveal(getResources(), fab, revealView, new Runnable() {
                         @Override
                         public void run() {
-                            ((MainActivity) getActivity()).onWelcomeFragmentFinished();
+                            if(mListener != null) {
+                                mListener.onWelcomeFragmentFinished();
+                            }
                         }
                     });
                 } else {
-                    ((MainActivity) getActivity()).onWelcomeFragmentFinished();
+                    if(mListener != null) {
+                        mListener.onWelcomeFragmentFinished();
+                    }
                 }
             }
         });
@@ -117,5 +135,11 @@ public class WelcomeFragment extends BaseFragment {
                 }
             });
         }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 }

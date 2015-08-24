@@ -1,6 +1,7 @@
 package sk.ursus.bigfilesfinder.ui;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,6 +38,11 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     private static final String EXTRA_SELECTED_PATHS = "selected_paths";
     private static final String EXTRA_CURRENT_FOLDER = "current_folder";
 
+    public interface OnFolderPickerFragmentListener {
+        void onFolderPickerFragmentFinished(HashSet<String> selectedPathsSet);
+    }
+    private OnFolderPickerFragmentListener mListener;
+
     private FilesAdapter mAdapter;
     private File mCurrentFolder;
     private HashSet<String> mSelectedPaths;
@@ -48,6 +54,14 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     public static FolderPickerFragment newInstance() {
         FolderPickerFragment f = new FolderPickerFragment();
         return f;
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof OnFolderPickerFragmentListener) {
+            mListener = (OnFolderPickerFragmentListener) activity;
+        }
     }
 
     @Override
@@ -87,7 +101,9 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((MainActivity) getActivity()).onFolderPickerFragmentFinished(mSelectedPaths);
+                if(mListener != null) {
+                    mListener.onFolderPickerFragmentFinished(mSelectedPaths);
+                }
             }
         });
 
@@ -126,6 +142,12 @@ public class FolderPickerFragment extends BaseFragment implements MainActivity.B
     public void onPause() {
         super.onPause();
         ((MainActivity) getActivity()).unregisterBackListener(this);
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     private File[] listFolders(File file) {

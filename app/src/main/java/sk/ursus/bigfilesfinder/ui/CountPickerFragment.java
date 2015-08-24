@@ -1,5 +1,6 @@
 package sk.ursus.bigfilesfinder.ui;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -21,8 +22,21 @@ public class CountPickerFragment extends BaseFragment {
 
     public static final String TAG = "count_picker_fragment";
 
+    public interface OnCountPickerFragmentListener {
+        void onCountPickerFragmentFinished(int count);
+    }
+    private OnCountPickerFragmentListener mListener;
+
     public static CountPickerFragment newInstance() {
         return new CountPickerFragment();
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof OnCountPickerFragmentListener) {
+            mListener = (OnCountPickerFragmentListener) activity;
+        }
     }
 
     @Nullable
@@ -69,11 +83,19 @@ public class CountPickerFragment extends BaseFragment {
                 final Integer count = tryParse(countEditText.getText().toString());
                 if (count != null && count > 0) {
                     Utils.hideKeyboard(getActivity());
-                    ((MainActivity) getActivity()).onCountPickerFragmentFinished(count);
+                    if(mListener != null) {
+                        mListener.onCountPickerFragmentFinished(count);
+                    }
                 }
             }
         });
 
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     public static Integer tryParse(String text) {
